@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../js/js.js" defer></script>
+    <script src="../js/stays.js" defer></script>
+    <link rel="stylesheet" href="../style.css">
+    <title>Document</title>
+</head>
+<body>
+    <div id="header">
+        Booking Website
+    </div>
+
+    <div id="navbar">
+        <a href="../index.html" class="link">Home</a>
+        <a href="./flights.html" class="link">Flights</a>
+        <a href="./cars.html" class="link">Cars</a>
+        <a href="./cruises.html" class="link">Cruises</a>
+        <a href="./contactUs.html" class="link">Contact Us</a>
+        <a href="./cart.html" class="link">Cart</a>
+    </div>
+
+    <div id="center">
+        <div id="side"></div>
+        <div id="main">
+            <form action="" id="stays-form">
+                <div class="form-group">
+                    <label for="city">City:</label>
+                    <input type="text" id="city" name="city" required placeholder="Austin, TX">
+                </div>
+
+                <div class="form-group">
+                    <label for="checkin-date">Check-in Date:</label>
+                    <input type="date" id="checkin-date" name="checkin-date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="checkout-date">Check-out Date:</label>
+                    <input type="date" id="checkout-date" name="checkout-date" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="adults">Adults:</label>
+                    <input type="number" id="adults" name="adults" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="children">Children:</label>
+                    <input type="number" id="children" name="children" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="infants">Infants:</label>
+                    <input type="number" id="infants" name="infants" min="0" required>
+                </div>
+
+                <button type="submit" id="search-stays-button">Search Stays</button>
+            </form>
+            <div id="stays-output" class="form-output">
+                
+            </div>
+            <table id="hotels-table" class="hidden">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>City</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Price per room</th>
+                        <th>Current Rooms</th>
+                    </tr>
+                </thead>
+                <tbody id="hotels-output">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="footer">
+        <p>Payson Eberz, poe210000</p>
+        <p>Nawaf Reaz, nxr210055</p>
+        <p>Carlos Figueroa-Diaz, caf190007</p>
+
+        <p>CS 6314.001</p>
+        <div id="time"></div>
+        <div id="settings">
+            View settings
+            <div id="settings-dialog" class="hidden">
+                <div class="option">
+                    <label for="text-size">Text size:</label>
+                    <select name="text-size" id="text-selector" onchange="updateFontSize()">
+                        <option value="large">large</option>
+                        <option value="medium" selected>medium</option>
+                        <option value="small">small</option>
+                    </select>
+                </div>
+                <div class="option">
+                    <label for="background-color">Background:</label>
+                    <select name="background-color" id="color-selector" onchange="updateBackgroundColor()">
+                        <option value="red">red</option>
+                        <option value="green" selected>green</option>
+                        <option value="blue">blue</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

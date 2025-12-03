@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../js/js.js" defer></script>
+    <script src="../js/cars.js" defer></script>
+    <link rel="stylesheet" href="../style.css">
+    <title>Cars Booking</title>
+</head>
+<body>
+    <div id="header">
+        Booking Website
+    </div>
+
+    <div id="navbar">
+        <a href="../index.html" class="link">Home</a>
+        <a href="./stays.html" class="link">Stays</a>
+        <a href="./flights.html" class="link">Flights</a>
+        <a href="./cruises.html" class="link">Cruises</a>
+        <a href="./contactUs.html" class="link">Contact Us</a>
+        <a href="./cart.html" class="link">Cart</a>
+    </div>
+
+    <div id="center">
+        <div id="side"></div>
+        <div id="main">
+            <h2>Available Cars</h2>
+        </div>
+    </div>
+
+    <div id="footer">
+        <p>Payson Eberz, poe210000</p>
+        <p>Nawaf Reaz, nxr210055</p>
+        <p>Carlos Figueroa-Diaz, caf190007</p>
+        <p>CS 6314.001</p>
+
+        <div id="time"></div>
+        <div id="settings">
+            View settings
+            <div id="settings-dialog" class="hidden">
+                <div class="option">
+                    <label for="text-size">Text size:</label>
+                    <select name="text-size" id="text-selector" onchange="updateFontSize()">
+                        <option value="large">large</option>
+                        <option value="medium" selected>medium</option>
+                        <option value="small">small</option>
+                    </select>
+                </div>
+                <div class="option">
+                    <label for="background-color">Background:</label>
+                    <select name="background-color" id="color-selector" onchange="updateBackgroundColor()">
+                        <option value="red">red</option>
+                        <option value="green" selected>green</option>
+                        <option value="blue">blue</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

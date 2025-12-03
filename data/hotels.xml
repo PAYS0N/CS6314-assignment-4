@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<hotels>
+  <hotel>
+    <hotelId>1</hotelId>
+    <name>Hotel Texas</name>
+    <city>Austin</city>
+    <availableRooms>97</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>120</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>2</hotelId>
+    <name>Antlers Hotel</name>
+    <city>Dallas</city>
+    <availableRooms>8</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>100</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>3</hotelId>
+    <name>Hampton Inn</name>
+    <city>Houston</city>
+    <availableRooms>7</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>95</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>4</hotelId>
+    <name>Hilton Hotels</name>
+    <city>San Antonio</city>
+    <availableRooms>6</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>110</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>5</hotelId>
+    <name>Motel6</name>
+    <city>Houston</city>
+    <availableRooms>7</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>105</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>6</hotelId>
+    <name>Days Inn</name>
+    <city>San Antonio</city>
+    <availableRooms>9</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>115</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>7</hotelId>
+    <name>Hyatt Regency</name>
+    <city>Los Angeles</city>
+    <availableRooms>3</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>140</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>8</hotelId>
+    <name>Westin</name>
+    <city>San Francisco</city>
+    <availableRooms>5</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>150</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>9</hotelId>
+    <name>Comfort Suites</name>
+    <city>San Francisco</city>
+    <availableRooms>6</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>155</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>10</hotelId>
+    <name>Hollywood Stay</name>
+    <city>Los Angeles</city>
+    <availableRooms>7</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>145</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>11</hotelId>
+    <name>Quality Inn</name>
+    <city>San Diego</city>
+    <availableRooms>8</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>135</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>12</hotelId>
+    <name>Balboa Inn</name>
+    <city>San Diego</city>
+    <availableRooms>5</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>130</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>13</hotelId>
+    <name>Super 8</name>
+    <city>Dallas</city>
+    <availableRooms>6</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>110</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>14</hotelId>
+    <name>Omni Hotels</name>
+    <city>Austin</city>
+    <availableRooms>1087</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>125</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>15</hotelId>
+    <name>Carlton Hotel</name>
+    <city>Los Angeles</city>
+    <availableRooms>6</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>150</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>16</hotelId>
+    <name>Key Route Inn</name>
+    <city>Sacramento</city>
+    <availableRooms>4</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>120</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>17</hotelId>
+    <name>Sonny's Inn</name>
+    <city>Lexington</city>
+    <availableRooms>5</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>115</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>18</hotelId>
+    <name>Oyo Rooms</name>
+    <city>San Francisco</city>
+    <availableRooms>7</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>160</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>19</hotelId>
+    <name>Aloft</name>
+    <city>San Antonio</city>
+    <availableRooms>6</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>118</pricePerNight>
+  </hotel>
+  <hotel>
+    <hotelId>20</hotelId>
+    <name>Fairfield Inn</name>
+    <city>San Diego</city>
+    <availableRooms>5</availableRooms>
+    <date>2025-11-09</date>
+    <pricePerNight>132</pricePerNight>
+  </hotel>
+</hotels>

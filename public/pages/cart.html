@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../js/js.js" defer></script>
+    <script src="../js/cart.js" defer></script>
+    <link rel="stylesheet" href="../style.css">
+    <title>Booking Cart</title>
+</head>
+<body>
+    <div id="header">
+        Booking Website
+    </div>
+
+    <div id="navbar">
+        <a href="../index.html" class="link">Home</a>
+        <a href="./stays.html" class="link">Stays</a>
+        <a href="./flights.html" class="link">Flights</a>
+        <a href="./cars.html" class="link">Cars</a>
+        <a href="./cruises.html" class="link">Cruises</a>
+        <a href="./contactUs.html" class="link">Contact Us</a>
+    </div>
+
+    <div id="center">
+        <div id="side"></div>
+        <div id="main">
+            <h2>Cart</h2>
+
+            <!-- Hotels Table -->
+            <h4 class="hidden" id="hotels-label">Hotels</h4>
+            <table id="hotels-table" class="hidden">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>City</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Adults</th>
+                        <th>Children</th>
+                        <th>Infants</th>
+                        <th>Rooms</th>
+                        <th>Price per Room</th>
+                        <th>Total Price</th>
+                    </tr>
+                </thead>
+                <tbody id="hotels-tbody">
+                </tbody>
+            </table>
+            <!-- Cars Table -->
+            <h4 class="hidden" id="cars-label">Cars</h4>
+            <table id="cars-table" class="hidden">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>City</th>
+                        <th>Car Type</th>
+                        <th>Check-in</th>
+                        <th>Check-out</th>
+                        <th>Price per Day</th>
+                        <th>Total Price</th>
+                    </tr>
+                </thead>
+                <tbody id="cars-tbody">
+                </tbody>
+            </table>
+            <button id="booking-button">Book</button>
+
+            <h4 class="hidden" id="flights-label">Flights</h4>
+            <table id="flights-table" class="hidden">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Origin</th>
+                        <th>Destination</th>
+                        <th>Departure Date</th>
+                        <th>Arrival Date</th>
+                        <th>Departure Time</th>
+                        <th>Arrival Time</th>
+                        <th>Total Price</th>
+                    </tr>
+                </thead>
+                <tbody id="flights-output">
+                </tbody>
+            </table>
+            <button id="flight-button" class="hidden">Book</button>
+        </div>
+    </div>
+
+    <div id="footer">
+        <p>Payson Eberz, poe210000</p>
+        <p>Nawaf Reaz, nxr210055</p>
+        <p>Carlos Figueroa-Diaz, caf190007</p>
+        <p>CS 6314.001</p>
+
+        <div id="time"></div>
+        <div id="settings">
+            View settings
+            <div id="settings-dialog" class="hidden">
+                <div class="option">
+                    <label for="text-size">Text size:</label>
+                    <select name="text-size" id="text-selector" onchange="updateFontSize()">
+                        <option value="large">large</option>
+                        <option value="medium" selected>medium</option>
+                        <option value="small">small</option>
+                    </select>
+                </div>
+                <div class="option">
+                    <label for="background-color">Background:</label>
+                    <select name="background-color" id="color-selector" onchange="updateBackgroundColor()">
+                        <option value="red">red</option>
+                        <option value="green" selected>green</option>
+                        <option value="blue">blue</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

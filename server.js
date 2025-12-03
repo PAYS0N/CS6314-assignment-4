@@ -1,0 +1,197 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const fs = require('fs');
+const path = require('path');
+const xml2js = require('xml2js');
+
+const app = express();
+const PORT = 3000;
+
+// Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+// API Routes
+app.post('/api/contact', (req, res) => {
+    // Save contact data to JSON
+    const contacts = JSON.parse(fs.readFileSync('./data/contacts.json', 'utf8') || '[]');
+    contacts.push(req.body);
+    fs.writeFileSync('./data/contacts.json', JSON.stringify(contacts, null, 2));
+    res.json({ success: true });
+});
+
+app.get('/api/flights', (req, res) => {
+    const flights = JSON.parse(fs.readFileSync('./data/flights.json', 'utf8'));
+    res.json(flights);
+});
+
+app.get('/api/hotels', (req, res) => {
+    const xml = fs.readFileSync('./data/hotels.xml', 'utf8');
+    xml2js.parseString(xml, (err, result) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json(result);
+    });
+});
+
+app.get('/api/cars', (req, res) => {
+    const xml = fs.readFileSync('./data/cars.xml', 'utf8');
+    xml2js.parseString(xml, (err, result) => {
+        if (err) return res.status(500).json({ error: err });
+        res.json(result);
+    });
+});
+
+// POST endpoint to create a new car booking
+app.post('/api/carbookings', (req, res) => {
+    const bookings = req.body.bookings; 
+    if (!bookings || !Array.isArray(bookings)) {
+        return res.status(400).json({ success: false, error: 'Invalid bookings data' });
+    }
+    const xmlFile = './data/carbookings.xml';
+    const carsFile = './data/cars.xml';
+    const builder = new xml2js.Builder();
+    // Read existing bookings 
+    let existingBookings = { bookings: { booking: [] } };
+    if (fs.existsSync(xmlFile)) {
+        const xmlData = fs.readFileSync(xmlFile, 'utf8');
+        xml2js.parseString(xmlData, (err, result) => {
+            if (!err && result.bookings) existingBookings = result;
+        });
+    }
+
+    // Read cars XML
+    const carsData = fs.readFileSync(carsFile, 'utf8');
+    xml2js.parseString(carsData, (err, carsResult) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        bookings.forEach(booking => {
+            // Add unique booking number
+            booking.bookingNumber = Date.now() + Math.floor(Math.random() * 1000);
+            // Add booking to carbookings.xml
+            existingBookings.bookings.booking.push({
+                userId: booking.userId,
+                bookingNumber: booking.bookingNumber,
+                carId: booking.carId,
+                city: booking.city,
+                carType: booking.carType,
+                checkin: booking.checkin,
+                checkout: booking.checkout,
+                pricePerDay: booking.pricePerDay,
+                totalPrice: booking.totalPrice
+            });
+            // Update car's bookedPeriods in cars.xml
+            const car = carsResult.cars.car.find(c => c.carId[0] === booking.carId);
+            if (car) {
+                if (!car.bookedPeriods) car.bookedPeriods = [{}];
+                if (!car.bookedPeriods[0].period) car.bookedPeriods[0].period = [];
+                car.bookedPeriods[0].period.push({
+                    checkin: booking.checkin,
+                    checkout: booking.checkout
+                });
+            }
+        });
+        // Save updated carbookings.xml
+        const updatedBookingsXml = builder.buildObject(existingBookings);
+        fs.writeFileSync(xmlFile, updatedBookingsXml);
+        // Save updated cars.xml
+        const updatedCarsXml = builder.buildObject(carsResult);
+        fs.writeFileSync(carsFile, updatedCarsXml);
+        res.json({ success: true, bookingNumbers: bookings.map(b => b.bookingNumber) });
+    });
+});
+
+
+app.post('/api/bookings', (req, res) => {
+    const bookings = req.body.bookings;
+    if (!bookings || !Array.isArray(bookings)) {
+        return res.status(400).json({ success: false, error: 'Invalid bookings data' });
+    }
+    //Save bookings to bookings.json
+    const bookingsFile = './data/bookings.json';
+    let existingBookings = [];
+    if (fs.existsSync(bookingsFile)) {
+        existingBookings = JSON.parse(fs.readFileSync(bookingsFile, 'utf8'));
+    }
+    const updatedBookings = existingBookings.concat(bookings);
+    fs.writeFileSync(bookingsFile, JSON.stringify(updatedBookings, null, 2));
+    //Update available rooms in hotels.xml
+    const xmlFile = './data/hotels.xml';
+    const xmlData = fs.readFileSync(xmlFile, 'utf8');
+
+    xml2js.parseString(xmlData, (err, result) => {
+        if (err) return res.status(500).json({ success: false, error: err.message });
+        bookings.forEach(booking => {
+            const hotel = result.hotels.hotel.find(h => h.hotelId[0] === booking.hotelId);
+            if (hotel) {
+                hotel.availableRooms[0] = (parseInt(hotel.availableRooms[0]) - booking.rooms).toString();
+            }
+        });
+        const builder = new xml2js.Builder();
+        const updatedXml = builder.buildObject(result);
+        fs.writeFileSync(xmlFile, updatedXml);
+    });
+    res.json({ success: true });
+});
+
+app.post('/api/flight-bookings', (req, res) => {
+    const bookings = req.body.bookings;
+
+    if (!bookings || !Array.isArray(bookings)) {
+        return res.status(400).json({ success: false, error: 'Invalid bookings data' });
+    }
+
+    // Save flight bookings to flight-bookings.json
+    const flightBookingsFile = './data/flight-bookings.json';
+    let existingFlightBookings = [];
+    if (fs.existsSync(flightBookingsFile)) {
+        existingFlightBookings = JSON.parse(fs.readFileSync(flightBookingsFile, 'utf8'));
+    }
+    const updatedFlightBookings = existingFlightBookings.concat(bookings);
+    fs.writeFileSync(flightBookingsFile, JSON.stringify(updatedFlightBookings, null, 2));
+
+    // Update available seats in flights.json
+    const flightsFile = './data/flights.json';
+    const flightsData = JSON.parse(fs.readFileSync(flightsFile, 'utf8'));
+
+    bookings.forEach(booking => {
+        const flight = flightsData.find(f => f.flightId === booking.flightId);
+        if (flight) {
+            flight.availableSeats -= booking.totalSeats;
+            if (flight.availableSeats < 0) {
+                flight.availableSeats = 0;
+            }
+        }
+    });
+
+    fs.writeFileSync(flightsFile, JSON.stringify(flightsData, null, 2));
+
+    res.json({ success: true });
+});
+
+app.get('/api/carbookings/:userId', (req, res) => {
+    const userId = req.params.userId;
+    const xmlFile = './data/carbookings.xml';
+    
+    if (!fs.existsSync(xmlFile)) {
+        return res.json({ bookings: { booking: [] } });
+    }
+    
+    const xmlData = fs.readFileSync(xmlFile, 'utf8');
+    xml2js.parseString(xmlData, (err, result) => {
+        if (err) return res.status(500).json({ error: err });
+        
+        if (result.bookings && result.bookings.booking) {
+            const userBookings = result.bookings.booking.filter(
+                b => b.userId && b.userId[0] === userId
+            );
+            res.json({ bookings: { booking: userBookings } });
+        } else {
+            res.json({ bookings: { booking: [] } });
+        }
+    });
+});
+
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+});
