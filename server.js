@@ -7,6 +7,19 @@ const xml2js = require('xml2js');
 const app = express();
 const PORT = 3000;
 
+const mysql = require('mysql2/promise');
+
+// Create database connection pool
+const pool = mysql.createPool({
+    host: 'localhost',
+    user: 'CS6314assignment4user',
+    password: 'Assignment4DBpassword',
+    database: 'Assignment4DB',
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
 // Middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -189,6 +202,57 @@ app.get('/api/carbookings/:userId', (req, res) => {
             res.json({ bookings: { booking: [] } });
         }
     });
+});
+
+// Check if phone number exists
+app.get('/api/check-phone/:phone', async (req, res) => {
+    const phone = req.params.phone;
+    
+    try {
+        const [rows] = await pool.query(
+            'SELECT phone FROM users WHERE phone = ?',
+            [phone]
+        );
+        
+        res.json({ exists: rows.length > 0 });
+    } catch (err) {
+        console.error('Error checking phone:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Register new user
+app.post('/api/registration', async (req, res) => {
+    const { phone, password, firstName, lastName, dob, gender, email } = req.body;
+    
+    try {
+        // Double-check phone doesn't exist (belt and suspenders)
+        const [existing] = await pool.query(
+            'SELECT phone FROM users WHERE phone = ?',
+            [phone]
+        );
+        
+        if (existing.length > 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Phone number already exists' 
+            });
+        }
+        
+        // Insert new user
+        await pool.query(
+            'INSERT INTO users (phone, password, firstName, lastName, dob, gender, email) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [phone, password, firstName, lastName, dob, gender || null, email]
+        );
+        
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Error registering user:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Database error' 
+        });
+    }
 });
 
 // Start server

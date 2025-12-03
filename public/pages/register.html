@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../js/js.js" defer></script>
-    <script src="../js/cruise.js" defer></script>
-    <script src="../jQuery-3.7.1.js"></script>
+    <script src="../js/register.js" defer></script>
     <link rel="stylesheet" href="../style.css">
     <title>Document</title>
 </head>
@@ -16,10 +15,10 @@
 
     <div id="navbar">
         <a href="../index.html" class="link">Home</a>
-        <a href="./register.html" class="link">Register</a>
         <a href="./stays.html" class="link">Stays</a>
         <a href="./flights.html" class="link">Flights</a>
         <a href="./cars.html" class="link">Cars</a>
+        <a href="./cruises.html" class="link">Cruises</a>
         <a href="./contactUs.html" class="link">Contact Us</a>
         <a href="./cart.html" class="link">Cart</a>
     </div>
@@ -27,54 +26,54 @@
     <div id="center">
         <div id="side"></div>
         <div id="main">
-            <form id="cruise-form">
+            <form action="" id="registration-form">
+                Register as a user:
                 <div class="form-group">
-                    <label for="destination">Destination:</label>
-                    <select id="destination" name="destination" required>
-                        <option value="">Select a destination</option>
-                        <option value="Alaska">Alaska</option>
-                        <option value="Bahamas">Bahamas</option>
-                        <option value="Europe">Europe</option>
-                        <option value="Mexico">Mexico</option>
-                    </select>
+                    <label for="phone">Phone number:</label>
+                    <input type="text" id="phone" name="phone" required placeholder="###-###-####" pattern="\d{3}-\d{3}-\d{4}" title="Phone number must be formatted like so: ###-###-####">
                 </div>
 
                 <div class="form-group">
-                    <label for="departure">Departure:</label>
-                    <input type="date" id="departure" name="departure" required>
+                    <label for="password">Password:</label>
+                    <input type="text" id="password" name="password" required minlength="8">
                 </div>
 
                 <div class="form-group">
-                    <label for="min-duration">Minimum duration of cruise:</label>
-                    <input type="number" id="min-duration" name="min-duration" min="3" required>
+                    <label for="password-retype">Retype Password:</label>
+                    <input type="text" id="password-retype" name="password-retype" required minlength="8">
                 </div>
 
                 <div class="form-group">
-                    <label for="max-duration">Maximum duration of cruise:</label>
-                    <input type="number" id="max-duration" name="max-duration" max="10" required>
+                    <label for="first-name">First name:</label>
+                    <input type="text" id="first-name" name="first-name" required pattern="[A-Z][a-zA-Z]*" title="First name must start with a capital letter, and contain only letters.">
                 </div>
 
                 <div class="form-group">
-                    <label for="adults">Adults:</label>
-                    <input type="number" id="adults" name="adults" min="0" required>
+                    <label for="last-name">Last name:</label>
+                    <input type="text" id="last-name" name="last-name" required pattern="[A-Z][a-zA-Z]*" title="Last name must start with a capital letter, and contain only letters.">
                 </div>
 
                 <div class="form-group">
-                    <label for="children">Children:</label>
-                    <input type="number" id="children" name="children" min="0" required>
+                    <label for="dob">Date of Birth:</label>
+                    <input type="date" id="dob" name="dob" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="infants">Infants:</label>
-                    <input type="number" id="infants" name="infants" min="0" required>
+                    <label>Gender:</label>
+                    <label><input type="radio" id="male-radio" name="gender" value="male"> Male</label>
+                    <label><input type="radio" id="female-radio" name="gender" value="female"> Female</label>
+                    <label><input type="radio" id="other-radio" name="gender" value="other"> Other</label>
+                    <label><input type="radio" id="no-response-radio" name="gender" value="Not Given"> Prefer not to say</label>
                 </div>
 
-                <button type="submit" id="submit-cruise">Submit</button>
+                <div class="form-group">
+                    <label for="email">Your email:</label>
+                    <input type="text" id="email" name="email" required pattern=".*@.*\.com" title="Email must contain '@' and then '.com'.">
+                </div>
+
+                <button type="submit" id="registration-button" >Submit</button>
+
             </form>
-                
-            <div id="cruise-output" class="form-output">
-                
-            </div>
         </div>
     </div>
 

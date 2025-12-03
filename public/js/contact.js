@@ -1,23 +1,23 @@
 // Allow the page to load before using event listeners
 window.addEventListener("load", () => {
-    setupContactListeners()
+    setupRegistrationListeners()
 });
 
 // Attaches event listeners to every contact form
-function setupContactListeners() {
+function setupRegistrationListeners() {
     document.querySelector('#contact-form').addEventListener("submit", (e) => {
-        submitContactForm(e)
+        submitRegistrationForm(e)
     })
 }
 
 // Displays contact information on the page upon a valid submission
-function displayContactResults(fn, ln, p, g, e, c) {
+function displayRegistrationResults(fn, ln, p, g, e, c) {
     const outputDiv = document.querySelector("#contact-output")
     outputDiv.textContent = "Name: " + fn + " " + ln + "\nPhone: " + p + "\nGender: " + g + "\nEmail: " + e + "\nComment: " + c
 }
 
 // Takes in user inputs for the contact form. Returns errors for invalid inputs, displays info and sends it to backend if valid
-function submitContactForm(e) {
+function submitRegistrationForm(e) {
     e.preventDefault()
     // Extract values from the form
     const formData = new FormData(document.querySelector("#contact-form"));
@@ -52,7 +52,7 @@ function submitContactForm(e) {
     }
     // All validation tests pass, display the text on the page and send the data to the backend
     else {
-    displayContactResults(firstName, lastName, phone, formData.get("gender"), email, comment)
+    displayRegistrationResults(firstName, lastName, phone, formData.get("gender"), email, comment)
     writeResultsToServer(firstName, lastName, phone, formData.get("gender"), email, comment)
     }
 }
