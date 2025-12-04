@@ -1,64 +1,52 @@
 // Allow the page to load before using event listeners
 window.addEventListener("load", () => {
-    setupRegistrationListeners()
+    setupContactListeners()
 });
 
+function isUserLoggedIn() {
+    return sessionStorage.getItem('loggedIn') === 'true';
+}   
+
 // Attaches event listeners to every contact form
-function setupRegistrationListeners() {
+function setupContactListeners() {
     document.querySelector('#contact-form').addEventListener("submit", (e) => {
-        submitRegistrationForm(e)
+        if (!isUserLoggedIn()) {
+            alert("You must be logged in to submit a comment.");
+            return;
+        }
+        submitContactForm(e)
     })
 }
 
 // Displays contact information on the page upon a valid submission
-function displayRegistrationResults(fn, ln, p, g, e, c) {
-    const outputDiv = document.querySelector("#contact-output")
-    outputDiv.textContent = "Name: " + fn + " " + ln + "\nPhone: " + p + "\nGender: " + g + "\nEmail: " + e + "\nComment: " + c
+function displayContactResults() {
+    alert("Comment submitted!")
 }
 
 // Takes in user inputs for the contact form. Returns errors for invalid inputs, displays info and sends it to backend if valid
-function submitRegistrationForm(e) {
+function submitContactForm(e) {
     e.preventDefault()
     // Extract values from the form
     const formData = new FormData(document.querySelector("#contact-form"));
-    const firstName = formData.get("first-name")
-    const lastName = formData.get("last-name")
-    const phone = formData.get("phone")
-    const email = formData.get("email")
     const comment = formData.get("comment")
-    // Regex for proper input formats as instructed in the assignment
-    const nameRegex = /^[A-Z][a-zA-Z]*$/
-    const phoneRegex = /^\(\s?\d{3}\s?\)\s?\d{3}\s?-\s?\d{4}$/
-    const emailRegex = /^.*@.*\..*$/
     const commentRegex = /^.{10}.*$/
-    // Validation of user inputs
-    if (firstName === lastName) {
-        alert("First and last name must be different.")
-    }
-    else if (!nameRegex.test(firstName)) {
-        alert("First name must start with a capital letter, and contain only letters.")
-    }
-    else if (!nameRegex.test(lastName)) {
-        alert("Last name must start with a capital letter, and contain only letters.")
-    }
-    else if (!phoneRegex.test(phone)) {
-        alert("Phone number must be formatted like so: (###)###-####")
-    }
-    else if (!emailRegex.test(email)) {
-        alert("Email must contain '@' and then '.'.")
-    }
-    else if (!commentRegex.test(comment)) {
+    if (!commentRegex.test(comment)) {
         alert("Comment must be at least 10 characters long.")
     }
-    // All validation tests pass, display the text on the page and send the data to the backend
     else {
-    displayRegistrationResults(firstName, lastName, phone, formData.get("gender"), email, comment)
-    writeResultsToServer(firstName, lastName, phone, formData.get("gender"), email, comment)
+    displayContactResults(comment)
+    writeResultsToServer(comment)
     }
 }
 
 // Sends the contact info to the backend server and saves it in contacts.json
-function writeResultsToServer(firstName, lastName, phone, gender, email, comment) {
+function writeResultsToServer(comment) {
+    const phone = sessionStorage.getItem('userPhone');
+    const firstName = sessionStorage.getItem('userFirstName');
+    const lastName = sessionStorage.getItem('userLastName');
+    const email = sessionStorage.getItem('userEmail');
+    const gender = sessionStorage.getItem('gender')
+    
     const userInput = { firstName, lastName, phone, gender, email, comment };
 
     fetch("/api/contact", {
@@ -78,7 +66,7 @@ function writeResultsToServer(firstName, lastName, phone, gender, email, comment
     // Inform the user of what happened
     .then(data => {
         if (data.success) {
-            alert("Contact information saved successfully!");
+            alert("Information saved successfully!");
         } else {
             alert("Something went wrong saving your contact data.");
         }

@@ -261,7 +261,7 @@ app.post('/api/login', async (req, res) => {
     
     try {
         const [rows] = await pool.query(
-            'SELECT phone, password, firstName, lastName, email FROM users WHERE phone = ?',
+            'SELECT phone, password, firstName, lastName, email, gender FROM users WHERE phone = ?',
             [phone]
         );
         
@@ -289,7 +289,8 @@ app.post('/api/login', async (req, res) => {
                 phone: user.phone,
                 firstName: user.firstName,
                 lastName: user.lastName,
-                email: user.email
+                email: user.email,
+                gender: user.gender
             }
         });
     } catch (err) {
