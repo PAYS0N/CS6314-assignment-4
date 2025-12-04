@@ -28,7 +28,24 @@
     <div id="center">
         <div id="side"></div>
         <div id="main">
-            View My Account
+            <div id="admin-section" style="display: none;">
+                <h3>Admin Functions</h3>
+                <div class="admin-controls">
+                    <button onclick="loadFlightsToDatabase()" class="admin-button">
+                        Load Flights from JSON to Database
+                    </button>
+                    <button onclick="loadHotelsToDatabase()" class="admin-button">
+                        Load Hotels from XML to Database
+                    </button>
+                </div>
+                <hr>
+            </div>
+            
+            <!-- User Bookings Section -->
+            <div id="user-section">
+                <h3>My Bookings</h3>
+                <div id="bookings-output"></div>
+            </div>
         </div>
     </div>
 

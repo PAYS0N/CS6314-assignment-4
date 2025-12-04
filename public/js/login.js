@@ -34,6 +34,7 @@ async function submitLoginForm(e) {
             sessionStorage.setItem('userLastName', data.user.lastName);
             sessionStorage.setItem('userEmail', data.user.email);
             sessionStorage.setItem('gender', data.user.gender);
+            sessionStorage.setItem('dob', data.user.dob);
             sessionStorage.setItem('isAdmin', data.user.phone === '222-222-2222' ? 'true' : 'false');
             
             alert("Login successful!");

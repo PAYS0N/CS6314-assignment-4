@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<contacts>
+  <contact>
+    <contactId>CONTACT-1764887433365-2618</contactId>
+    <phone>123-456-7890</phone>
+    <firstName>Manly</firstName>
+    <lastName>Man</lastName>
+    <dob>12-03-2025</dob>
+    <email>man@man.com</email>
+    <gender>male</gender>
+    <comment/>
+  </contact>
+  <contact>
+    <contactId>CONTACT-1764887500434-5635</contactId>
+    <phone>098-765-4321</phone>
+    <firstName>Womanly</firstName>
+    <lastName>Woman</lastName>
+    <dob>11-06-2025</dob>
+    <email>woman@woman.com</email>
+    <gender>female</gender>
+    <comment/>
+  </contact>
+  <contact>
+    <contactId>CONTACT-1764887649411-5815</contactId>
+    <phone>098-765-4321</phone>
+    <firstName>Womanly</firstName>
+    <lastName>Woman</lastName>
+    <dob>11-06-2025</dob>
+    <email>woman@woman.com</email>
+    <gender>female</gender>
+    <comment>new comment that is recorded</comment>
+  </contact>
+</contacts>

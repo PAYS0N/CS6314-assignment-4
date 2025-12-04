@@ -26,12 +26,68 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // API Routes
+// Contact submission route - stores in XML with auto-increment
 app.post('/api/contact', (req, res) => {
-    // Save contact data to JSON
-    const contacts = JSON.parse(fs.readFileSync('./data/contacts.json', 'utf8') || '[]');
-    contacts.push(req.body);
-    fs.writeFileSync('./data/contacts.json', JSON.stringify(contacts, null, 2));
-    res.json({ success: true });
+    const { firstName, lastName, phone, gender, email, dob, comment } = req.body;
+    const xmlFile = './data/contacts.xml';
+    
+    let existingContacts = { contacts: { contact: [] } };
+    
+    // Read existing XML file
+if (fs.existsSync(xmlFile)) {
+    const xmlData = fs.readFileSync(xmlFile, 'utf8');
+    xml2js.parseString(xmlData, (err, result) => {
+        if (!err && result && result.contacts) {
+            if (result.contacts.contact && Array.isArray(result.contacts.contact)) {
+                existingContacts.contacts.contact = result.contacts.contact;
+                
+            }
+        }
+    });
+}
+    
+    // Create new contact with auto-incremented ID
+    const nextId = 'CONTACT-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+
+    const newContact = {
+        contactId: nextId,
+        phone: phone,
+        firstName: firstName,
+        lastName: lastName,
+        dob: dob,
+        email: email,
+        gender: gender || 'Not Given',
+        comment: comment
+    };
+    
+    // Ensure contact array exists before pushing
+    if (!existingContacts.contacts.contact) {
+        existingContacts.contacts.contact = [];
+    }
+    
+    existingContacts.contacts.contact.push(newContact);
+    
+    // Build XML and save
+    const builder = new xml2js.Builder({
+        rootName: 'contacts',
+        xmldec: { version: '1.0', encoding: 'UTF-8' }
+    });
+    
+    try {
+        const xml = builder.buildObject(existingContacts.contacts);
+        fs.writeFileSync(xmlFile, xml);
+        
+        res.json({ 
+            success: true,
+            contactId: nextId
+        });
+    } catch (err) {
+        console.error('Error writing XML:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to save contact' 
+        });
+    }
 });
 
 app.get('/api/flights', (req, res) => {
@@ -261,7 +317,7 @@ app.post('/api/login', async (req, res) => {
     
     try {
         const [rows] = await pool.query(
-            'SELECT phone, password, firstName, lastName, email, gender FROM users WHERE phone = ?',
+            'SELECT phone, password, firstName, lastName, email, gender, dob FROM users WHERE phone = ?',
             [phone]
         );
         
@@ -290,7 +346,8 @@ app.post('/api/login', async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
-                gender: user.gender
+                gender: user.gender,
+                dob: user.dob,
             }
         });
     } catch (err) {
@@ -302,8 +359,81 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-app.post('/api/logout', (req, res) => {
-    res.json({ success: true });
+app.post('/api/admin/load-flights', async (req, res) => {
+    const adminPhone = req.body.adminPhone;
+    
+    // Verify admin
+    if (adminPhone !== '222-222-2222') {
+        return res.status(403).json({ 
+            success: false, 
+            error: 'Unauthorized. Admin access required.' 
+        });
+    }
+    
+    try {
+        // Read flights from JSON file
+        const flightsFile = './data/flights.json';
+        
+        if (!fs.existsSync(flightsFile)) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Flights JSON file not found' 
+            });
+        }
+        
+        const flightsData = JSON.parse(fs.readFileSync(flightsFile, 'utf8'));
+        
+        if (!Array.isArray(flightsData) || flightsData.length === 0) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Invalid flights data' 
+            });
+        }
+        
+        // Clear existing flights (optional - remove if you want to keep existing data)
+        await pool.query('DELETE FROM flights');
+        
+        // Insert each flight into database
+        let successCount = 0;
+        let errorCount = 0;
+        
+        for (const flight of flightsData) {
+            try {
+                await pool.query(
+                    'INSERT INTO flights (flightId, origin, destination, departureDate, arrivalDate, departureTime, arrivalTime, availableSeats, price) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                    [
+                        flight.flightId,
+                        flight.origin,
+                        flight.destination,
+                        flight.departureDate,
+                        flight.arrivalDate,
+                        flight.departureTime,
+                        flight.arrivalTime,
+                        flight.availableSeats,
+                        flight.price
+                    ]
+                );
+                successCount++;
+            } catch (err) {
+                console.error(`Error inserting flight ${flight.flightId}:`, err);
+                errorCount++;
+            }
+        }
+        
+        res.json({ 
+            success: true,
+            message: `Successfully loaded ${successCount} flights into database`,
+            successCount: successCount,
+            errorCount: errorCount
+        });
+        
+    } catch (err) {
+        console.error('Error loading flights:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to load flights into database' 
+        });
+    }
 });
 
 // Start server
