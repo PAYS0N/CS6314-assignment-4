@@ -255,6 +255,56 @@ app.post('/api/registration', async (req, res) => {
     }
 });
 
+// Login route
+app.post('/api/login', async (req, res) => {
+    const { phone, password } = req.body;
+    
+    try {
+        const [rows] = await pool.query(
+            'SELECT phone, password, firstName, lastName, email FROM users WHERE phone = ?',
+            [phone]
+        );
+        
+        if (rows.length === 0) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid phone number or password' 
+            });
+        }
+        
+        const user = rows[0];
+        
+        // Check password, plain text is fine
+        if (user.password !== password) {
+            return res.status(401).json({ 
+                success: false, 
+                error: 'Invalid phone number or password' 
+            });
+        }
+        
+        // Return user info
+        res.json({ 
+            success: true,
+            user: {
+                phone: user.phone,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email
+            }
+        });
+    } catch (err) {
+        console.error('Error logging in:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Database error' 
+        });
+    }
+});
+
+app.post('/api/logout', (req, res) => {
+    res.json({ success: true });
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);

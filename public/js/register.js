@@ -62,7 +62,7 @@ async function validatePhone(phone) {
 }
 
 function sendToLogin() {
-    alert('not implemented')
+    window.location.href = "./login.html"
 }
 
 async function writeResultsToServer(phone, password, firstName, lastName, dob, gender, email) {
