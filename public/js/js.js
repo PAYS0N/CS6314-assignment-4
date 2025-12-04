@@ -5,7 +5,23 @@ window.addEventListener("load", () => {
     setupListeners()
 
     updateBackgroundColor()
+
+    displayLoggedInUser()
 })
+
+function displayLoggedInUser() {
+    const loggedIn = sessionStorage.getItem('loggedIn');
+    const firstName = sessionStorage.getItem('userFirstName');
+    const lastName = sessionStorage.getItem('userLastName');
+    
+    if (loggedIn === 'true' && firstName && lastName) {
+        
+        let userInfoDiv = document.querySelector("#login-display");
+        userInfoDiv.classList.remove('hidden')
+        userInfoDiv.textContent = `Welcome, ${firstName} ${lastName}.`;
+    }
+
+}
 
 function populateTime() {
     const timeDiv = document.querySelector("#time")
