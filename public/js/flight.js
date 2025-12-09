@@ -112,69 +112,76 @@ function submitFlightForm(e) {
 }
 
 async function displayAvailableFlights(flightDetails, passengerDetails) {
-    let [origin, destination, departure, returnDate] = flightDetails
-    let [adults, children, infants] = passengerDetails
-
-    document.querySelector("#flights-output").innerHTML = ""
-
-    const strOriginName = origin.trim().split(",")[0]
-    const strDestName = destination.trim().split(",")[0]
-    const jsonFlights = await getFlights()
-
-    let depFound = false
-    let retFound = false
-    jsonFlights.forEach(flight => {
-        // check if flight is available
-        if (
-            flight.origin === strOriginName &&
-            flight.destination === strDestName &&
-            flight.departureDate === departure &&
-            flight.availableSeats >= adults + children + infants
-        ) {
-            depFound = addAFlight(flight, adults, children, infants, flight.origin === strOriginName)
+    let [origin, destination, departure, returnDate] = flightDetails;
+    let [adults, children, infants] = passengerDetails;
+    
+    document.querySelector("#flights-output").innerHTML = "";
+    
+    const strOriginName = origin.trim().split(",")[0];
+    const strDestName = destination.trim().split(",")[0];
+    const totalPassengers = adults + children + infants;
+    
+    let depFound = false;
+    let retFound = false;
+    
+    try {
+        // Search for departure flights (exact date first)
+        let depFlights = await searchFlights(strOriginName, strDestName, departure, totalPassengers, true);
+        
+        if (depFlights && depFlights.length > 0) {
+            depFlights.forEach(flight => {
+                addAFlight(flight, adults, children, infants, true);
+            });
+            depFound = true;
         }
-        if (
-            flight.origin === strDestName &&
-            flight.destination === strOriginName &&
-            flight.departureDate === returnDate &&
-            flight.availableSeats >= adults + children + infants
-        ) {
-            retFound = addAFlight(flight, adults, children, infants, flight.origin === strOriginName)
+        
+        // Search for return flights if round trip (exact date first)
+        if (returnDate && returnDate !== "") {
+            let retFlights = await searchFlights(strDestName, strOriginName, returnDate, totalPassengers, true);
+            
+            if (retFlights && retFlights.length > 0) {
+                retFlights.forEach(flight => {
+                    addAFlight(flight, adults, children, infants, false);
+                });
+                retFound = true;
+            }
+        } else {
+            // One way trip, don't need return flight
+            retFound = true;
         }
-    });
-    if (!depFound || !retFound) {
-        jsonFlights.forEach(flight => {
-            // check if flight is available
-            const flightDate = new Date(flight.departureDate);
-            const depDate = new Date(departure);
-            const retDate = (returnDate != "") ? new Date(returnDate) : null;
-
-            if (
-                flight.origin === strOriginName &&
-                flight.destination === strDestName &&
-                Math.abs(flightDate - depDate) < 3 * 24 * 60 * 60 * 1000 && 
-                flight.departureDate != departure &&
-                flight.availableSeats >= adults + children + infants
-            ) {
-                depFound = addAFlight(flight, adults, children, infants, flight.origin === strOriginName)
+        
+        // If exact dates not found, search within 3 days
+        if (!depFound) {
+            let depFlightsNear = await searchFlights(strOriginName, strDestName, departure, totalPassengers, false);
+            
+            if (depFlightsNear && depFlightsNear.length > 0) {
+                depFlightsNear.forEach(flight => {
+                    addAFlight(flight, adults, children, infants, true);
+                });
+                depFound = true;
             }
-            if (
-                flight.origin === strDestName &&
-                flight.destination === strOriginName &&
-                retDate && Math.abs(flightDate - retDate) < 3 * 24 * 60 * 60 * 1000 &&
-                flight.departureDate != returnDate &&
-                flight.availableSeats >= adults + children + infants
-            ) {
-                retFound = addAFlight(flight, adults, children, infants, flight.origin === strOriginName)
+        }
+        
+        if (!retFound && returnDate && returnDate !== "") {
+            let retFlightsNear = await searchFlights(strDestName, strOriginName, returnDate, totalPassengers, false);
+            
+            if (retFlightsNear && retFlightsNear.length > 0) {
+                retFlightsNear.forEach(flight => {
+                    addAFlight(flight, adults, children, infants, false);
+                });
+                retFound = true;
             }
-        });
+        }
+        
+        if (!depFound || (returnDate && returnDate !== "" && !retFound)) {
+            alert("No flights found for the selected dates");
+        }
+        
+    } catch (err) {
+        console.error('Error searching flights:', err);
+        alert('Error searching for flights. Please try again.');
     }
-    if(!depFound && !retFound) {
-        alert("No flights found")
-    }
-
 }
-
 function addAFlight(flight, adults, children, infants, isDepFlight) {
     revealFlightLabels();
 
@@ -198,13 +205,22 @@ function addAFlight(flight, adults, children, infants, isDepFlight) {
     return true
 }
 
-async function getFlights() {
+async function searchFlights(origin, destination, date, passengers, exactDate) {
     try {
-        const response = await fetch('/api/flights')
-
-        return await response.json()
+        const url = `/api/flights/search?origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&date=${date}&passengers=${passengers}&exact=${exactDate}`;
+        
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error('Failed to search flights');
+        }
+        
+        const data = await response.json();
+        return data.flights;
+        
     } catch (err) {
-        console.error('Error fetching flights:', err)
+        console.error('Error fetching flights:', err);
+        return [];
     }
 }
 

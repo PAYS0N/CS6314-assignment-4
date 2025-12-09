@@ -90,9 +90,86 @@ if (fs.existsSync(xmlFile)) {
     }
 });
 
-app.get('/api/flights', (req, res) => {
-    const flights = JSON.parse(fs.readFileSync('./data/flights.json', 'utf8'));
-    res.json(flights);
+app.get('/api/flights/search', async (req, res) => {
+    const { origin, destination, date, passengers, exact } = req.query;
+    
+    if (!origin || !destination || !date || !passengers) {
+        return res.status(400).json({ 
+            error: 'Missing required parameters: origin, destination, date, passengers' 
+        });
+    }
+    
+    const isExact = exact === 'true';
+    const passengerCount = parseInt(passengers);
+    
+    try {
+        let query;
+        let params;
+        
+        if (isExact) {
+            // Search for exact date match
+            query = `
+                SELECT * FROM flights 
+                WHERE origin = ? 
+                AND destination = ? 
+                AND departureDate = ? 
+                AND availableSeats >= ?
+                ORDER BY departureTime
+            `;
+            params = [origin, destination, date, passengerCount];
+        } else {
+            // Search within 3 days before and after
+            query = `
+                SELECT * FROM flights 
+                WHERE origin = ? 
+                AND destination = ? 
+                AND departureDate BETWEEN DATE_SUB(?, INTERVAL 3 DAY) AND DATE_ADD(?, INTERVAL 3 DAY)
+                AND departureDate != ?
+                AND availableSeats >= ?
+                ORDER BY departureDate, departureTime
+            `;
+            params = [origin, destination, date, date, date, passengerCount];
+        }
+        
+        const [rows] = await pool.query(query, params);
+        
+        res.json({ 
+            flights: rows,
+            count: rows.length,
+            searchParams: {
+                origin,
+                destination,
+                date,
+                passengers: passengerCount,
+                exactDate: isExact
+            }
+        });
+        
+    } catch (err) {
+        console.error('Error searching flights:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Get specific flight by ID
+app.get('/api/flights/:flightId', async (req, res) => {
+    const { flightId } = req.params;
+    
+    try {
+        const [rows] = await pool.query(
+            'SELECT * FROM flights WHERE flightId = ?',
+            [flightId]
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Flight not found' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching flight:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
 });
 
 app.get('/api/hotels', (req, res) => {
@@ -202,39 +279,132 @@ app.post('/api/bookings', (req, res) => {
     res.json({ success: true });
 });
 
-app.post('/api/flight-bookings', (req, res) => {
-    const bookings = req.body.bookings;
-
-    if (!bookings || !Array.isArray(bookings)) {
-        return res.status(400).json({ success: false, error: 'Invalid bookings data' });
+app.post('/api/flight-bookings/complete', async (req, res) => {
+    const { bookings } = req.body;
+    
+    if (!bookings || !Array.isArray(bookings) || bookings.length === 0) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'Invalid booking data' 
+        });
     }
-
-    // Save flight bookings to flight-bookings.json
-    const flightBookingsFile = './data/flight-bookings.json';
-    let existingFlightBookings = [];
-    if (fs.existsSync(flightBookingsFile)) {
-        existingFlightBookings = JSON.parse(fs.readFileSync(flightBookingsFile, 'utf8'));
-    }
-    const updatedFlightBookings = existingFlightBookings.concat(bookings);
-    fs.writeFileSync(flightBookingsFile, JSON.stringify(updatedFlightBookings, null, 2));
-
-    // Update available seats in flights.json
-    const flightsFile = './data/flights.json';
-    const flightsData = JSON.parse(fs.readFileSync(flightsFile, 'utf8'));
-
-    bookings.forEach(booking => {
-        const flight = flightsData.find(f => f.flightId === booking.flightId);
-        if (flight) {
-            flight.availableSeats -= booking.totalSeats;
-            if (flight.availableSeats < 0) {
-                flight.availableSeats = 0;
+    
+    const connection = await pool.getConnection();
+    
+    try {
+        await connection.beginTransaction();
+        
+        const completedBookings = [];
+        
+        for (const booking of bookings) {
+            const { flightId, passengers, totalPrice, totalSeats } = booking;
+            
+            // Get flight details
+            const [flightRows] = await connection.query(
+                'SELECT * FROM flights WHERE flightId = ?',
+                [flightId]
+            );
+            
+            if (flightRows.length === 0) {
+                throw new Error(`Flight ${flightId} not found`);
             }
+            
+            const flight = flightRows[0];
+            
+            // Check if enough seats available
+            if (flight.availableSeats < totalSeats) {
+                throw new Error(`Not enough seats available on flight ${flightId}`);
+            }
+            
+            // Insert or update passengers
+            for (const passenger of passengers) {
+                // Check if passenger exists
+                const [existingPassenger] = await connection.query(
+                    'SELECT ssn FROM passengers WHERE ssn = ?',
+                    [passenger.ssn]
+                );
+                
+                if (existingPassenger.length === 0) {
+                    // Insert new passenger
+                    await connection.query(
+                        'INSERT INTO passengers (ssn, firstName, lastName, dateOfBirth, category) VALUES (?, ?, ?, ?, ?)',
+                        [passenger.ssn, passenger.firstName, passenger.lastName, passenger.dateOfBirth, passenger.category]
+                    );
+                } else {
+                    // Update existing passenger (in case details changed)
+                    await connection.query(
+                        'UPDATE passengers SET firstName = ?, lastName = ?, dateOfBirth = ?, category = ? WHERE ssn = ?',
+                        [passenger.firstName, passenger.lastName, passenger.dateOfBirth, passenger.category, passenger.ssn]
+                    );
+                }
+            }
+            
+            // Insert flight booking
+            const [bookingResult] = await connection.query(
+                'INSERT INTO flight_bookings (flightId, totalPrice) VALUES (?, ?)',
+                [flightId, totalPrice]
+            );
+            
+            const flightBookingId = bookingResult.insertId;
+            
+            // Insert tickets for each passenger
+            const ticketDetails = [];
+            for (const passenger of passengers) {
+                const [ticketResult] = await connection.query(
+                    'INSERT INTO tickets (flightBookingId, ssn, price) VALUES (?, ?, ?)',
+                    [flightBookingId, passenger.ssn, passenger.price]
+                );
+                
+                ticketDetails.push({
+                    ticketId: ticketResult.insertId,
+                    flightBookingId: flightBookingId,
+                    ssn: passenger.ssn,
+                    firstName: passenger.firstName,
+                    lastName: passenger.lastName,
+                    dateOfBirth: passenger.dateOfBirth,
+                    category: passenger.category,
+                    price: passenger.price
+                });
+            }
+            
+            // Update available seats
+            await connection.query(
+                'UPDATE flights SET availableSeats = availableSeats - ? WHERE flightId = ?',
+                [totalSeats, flightId]
+            );
+            
+            // Add completed booking info
+            completedBookings.push({
+                flightBookingId: flightBookingId,
+                flightId: flightId,
+                origin: flight.origin,
+                destination: flight.destination,
+                departureDate: flight.departureDate,
+                arrivalDate: flight.arrivalDate,
+                departureTime: flight.departureTime,
+                arrivalTime: flight.arrivalTime,
+                totalPrice: totalPrice,
+                tickets: ticketDetails
+            });
         }
-    });
-
-    fs.writeFileSync(flightsFile, JSON.stringify(flightsData, null, 2));
-
-    res.json({ success: true });
+        
+        await connection.commit();
+        
+        res.json({ 
+            success: true,
+            bookings: completedBookings
+        });
+        
+    } catch (err) {
+        await connection.rollback();
+        console.error('Error completing flight booking:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: err.message || 'Failed to complete booking' 
+        });
+    } finally {
+        connection.release();
+    }
 });
 
 app.get('/api/carbookings/:userId', (req, res) => {

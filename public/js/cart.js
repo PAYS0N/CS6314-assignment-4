@@ -197,13 +197,17 @@ async function completeBooking() {
 
 async function getFlightDetails(id) {
     try {
-        const response = await fetch('/api/flights')
-        const flights = await response.json()
-        return flights.find(flight => flight.flightId == id)
-
+        const response = await fetch(`/api/flights/${id}`);
+        
+        if (!response.ok) {
+            throw new Error('Flight not found');
+        }
+        
+        return await response.json();
         
     } catch (err) {
-        console.error('Error fetching flights:', err)
+        console.error('Error fetching flight details:', err);
+        return null;
     }
 }
 
@@ -256,11 +260,17 @@ async function completeFlightBooking() {
         return;
     }
 
-    const allPassengers = [];
+    const allBookingData = [];
     
+    // Collect passenger info for each flight
     for (const flight of flightCart) {
         const totalPassengers = flight.adults + flight.children + flight.infants;
         const flightDetails = await getFlightDetails(flight.flightId);
+        
+        if (!flightDetails) {
+            alert(`Could not find flight details for flight ${flight.flightId}`);
+            return;
+        }
         
         alert(`Please enter information for ${totalPassengers} passenger(s) for flight ${flight.flightId} (${flightDetails.origin} to ${flightDetails.destination})`);
         
@@ -270,7 +280,8 @@ async function completeFlightBooking() {
         for (let i = 0; i < flight.adults; i++) {
             const passenger = collectPassengerInfo(`Adult ${i + 1}`);
             if (!passenger) return;
-            passenger.type = 'adult';
+            passenger.category = 'adult';
+            passenger.price = flightDetails.price;
             passengers.push(passenger);
         }
         
@@ -278,7 +289,8 @@ async function completeFlightBooking() {
         for (let i = 0; i < flight.children; i++) {
             const passenger = collectPassengerInfo(`Child ${i + 1}`);
             if (!passenger) return;
-            passenger.type = 'child';
+            passenger.category = 'child';
+            passenger.price = flightDetails.price * 0.7;
             passengers.push(passenger);
         }
         
@@ -286,59 +298,33 @@ async function completeFlightBooking() {
         for (let i = 0; i < flight.infants; i++) {
             const passenger = collectPassengerInfo(`Infant ${i + 1}`);
             if (!passenger) return;
-            passenger.type = 'infant';
+            passenger.category = 'infant';
+            passenger.price = flightDetails.price * 0.1;
             passengers.push(passenger);
         }
         
-        allPassengers.push({
+        // Calculate total price
+        const totalPrice = passengers.reduce((sum, p) => +sum + +p.price, 0);
+        
+        allBookingData.push({
             flightId: flight.flightId,
-            passengers: passengers
+            passengers: passengers,
+            totalPrice: totalPrice,
+            totalSeats: totalPassengers
         });
     }
 
-    // Create bookings
-    const bookings = flightCart.map((item, index) => {
-        const bookingNumber = 'FL-' + Date.now() + '-' + Math.floor(Math.random() * 10000);
-        const flightDetails = getFlightDetails(item.flightId);
-        
-        return flightDetails.then(details => {
-            const totalPrice = details.price * item.adults + 
-                             details.price * item.children * 0.7 + 
-                             details.price * item.infants * 0.1;
-            
-            return {
-                userId,
-                bookingNumber,
-                flightId: item.flightId,
-                origin: details.origin,
-                destination: details.destination,
-                departureDate: details.departureDate,
-                arrivalDate: details.arrivalDate,
-                departureTime: details.departureTime,
-                arrivalTime: details.arrivalTime,
-                adults: item.adults,
-                children: item.children,
-                infants: item.infants,
-                totalSeats: item.adults + item.children + item.infants,
-                totalPrice: totalPrice,
-                passengers: allPassengers[index].passengers
-            };
-        });
-    });
-
+    // Send booking data to server
     try {
-        const resolvedBookings = await Promise.all(bookings);
-        
-        const response = await fetch('/api/flight-bookings', {
+        const response = await fetch('/api/flight-bookings/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ bookings: resolvedBookings })
+            body: JSON.stringify({ bookings: allBookingData })
         });
 
         if (!response.ok) {
-            const text = await response.text();
-            console.error('Server error:', text);
-            alert('Booking failed. Please try again.');
+            const errorData = await response.json();
+            alert('Booking failed: ' + (errorData.error || 'Unknown error'));
             return;
         }
 
@@ -348,26 +334,9 @@ async function completeFlightBooking() {
             sessionStorage.setItem('cart', JSON.stringify(remainingCart));
             
             // Display booking confirmation
-            let confirmationMsg = 'Flight booking successful!\n\n';
-            confirmationMsg += `User ID: ${userId}\n`;
-            resolvedBookings.forEach(booking => {
-                confirmationMsg += `Booking Number: ${booking.bookingNumber}\n`;
-                confirmationMsg += `Flight ID: ${booking.flightId}\n`;
-                confirmationMsg += `Flight: ${booking.origin} to ${booking.destination}\n`;
-                confirmationMsg += `Departure: ${booking.departureDate} at ${booking.departureTime}\n`;
-                confirmationMsg += `Arrival: ${booking.arrivalDate} at ${booking.arrivalTime}\n`;
-                confirmationMsg += `Total Price: $${booking.totalPrice.toFixed(2)}\n`;
-                confirmationMsg += `Passengers:\n`;
-                booking.passengers.forEach(p => {
-                    confirmationMsg += `  - ${p.firstName} ${p.lastName} (${p.type})\n`;
-                    confirmationMsg += `  - ${p.ssn}\n`;
-                    confirmationMsg += `  - ${p.dateOfBirth}\n`;
-                });
-                confirmationMsg += '\n';
-            });
+            displayBookingConfirmation(result.bookings);
             
-            alert(confirmationMsg);
-            window.location.reload();
+            alert('Flight booking successful! Check the page for booking details.');
         } else {
             alert('Booking failed: ' + result.error);
         }
@@ -384,13 +353,13 @@ function collectPassengerInfo(passengerLabel) {
     const lastName = prompt(`Enter last name for ${passengerLabel}:`);
     if (!lastName) return null;
     
-    const dob = prompt(`Enter date of birth for ${passengerLabel} (YYYY-MM-DD):`);
+    const dob = prompt(`Enter date of birth for ${passengerLabel} (MM-DD-YYYY):`);
     if (!dob) return null;
     
     // Validate date format
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
     if (!dateRegex.test(dob)) {
-        alert('Invalid date format. Please use YYYY-MM-DD');
+        alert('Invalid date format. Please use MM-DD-YYYY');
         return null;
     }
     
@@ -410,4 +379,70 @@ function collectPassengerInfo(passengerLabel) {
         dateOfBirth: dob,
         ssn: ssn
     };
+}
+
+function displayBookingConfirmation(bookings) {
+    const mainDiv = document.querySelector("#main");
+    
+    // Clear existing content
+    const existingConfirmation = document.querySelector("#booking-confirmation");
+    if (existingConfirmation) {
+        existingConfirmation.remove();
+    }
+    
+    const confirmationDiv = document.createElement("div");
+    confirmationDiv.id = "booking-confirmation";
+    confirmationDiv.style.marginTop = "2rem";
+    
+    let html = '<h2>Booking Confirmation</h2>';
+    
+    bookings.forEach(booking => {
+        html += `
+            <div class="booking-details" style="border: 2px solid black; padding: 1rem; margin: 1rem 0;">
+                <h3>Flight Booking ID: ${booking.flightBookingId}</h3>
+                <div class="flight-info">
+                    <p><strong>Flight ID:</strong> ${booking.flightId}</p>
+                    <p><strong>Route:</strong> ${booking.origin} → ${booking.destination}</p>
+                    <p><strong>Departure:</strong> ${booking.departureDate} at ${booking.departureTime}</p>
+                    <p><strong>Arrival:</strong> ${booking.arrivalDate} at ${booking.arrivalTime}</p>
+                    <p><strong>Total Price:</strong> $${booking.totalPrice.toFixed(2)}</p>
+                </div>
+                
+                <h4>Passenger Tickets:</h4>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background-color: #ddd;">
+                            <th style="border: 1px solid black; padding: 0.5rem;">Ticket ID</th>
+                            <th style="border: 1px solid black; padding: 0.5rem;">SSN</th>
+                            <th style="border: 1px solid black; padding: 0.5rem;">Name</th>
+                            <th style="border: 1px solid black; padding: 0.5rem;">DOB</th>
+                            <th style="border: 1px solid black; padding: 0.5rem;">Category</th>
+                            <th style="border: 1px solid black; padding: 0.5rem;">Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        booking.tickets.forEach(ticket => {
+            html += `
+                <tr>
+                    <td style="border: 1px solid black; padding: 0.5rem;">${ticket.ticketId}</td>
+                    <td style="border: 1px solid black; padding: 0.5rem;">${ticket.ssn}</td>
+                    <td style="border: 1px solid black; padding: 0.5rem;">${ticket.firstName} ${ticket.lastName}</td>
+                    <td style="border: 1px solid black; padding: 0.5rem;">${ticket.dateOfBirth}</td>
+                    <td style="border: 1px solid black; padding: 0.5rem;">${ticket.category}</td>
+                    <td style="border: 1px solid black; padding: 0.5rem;">$${ticket.price}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+    });
+    
+    confirmationDiv.innerHTML = html;
+    mainDiv.appendChild(confirmationDiv);
 }
