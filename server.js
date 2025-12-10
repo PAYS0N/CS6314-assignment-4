@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
 const xml2js = require('xml2js');
+const initializeDatabase = require('./db-init');
 
 const app = express();
 const PORT = 3000;
@@ -606,7 +607,26 @@ app.post('/api/admin/load-flights', async (req, res) => {
     }
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-});
+async function startServer() {
+    try {
+        // Initialize database
+        console.log('Initializing database...');
+        await initializeDatabase();
+        
+        // Test database connection
+        const connection = await pool.getConnection();
+        console.log('Database connection pool established');
+        connection.release();
+        
+        // Start server
+        app.listen(PORT, () => {
+            console.log(`Server running at http://localhost:${PORT}`);
+        });
+        
+    } catch (err) {
+        console.error('Failed to start server:', err);
+        process.exit(1);
+    }
+}
+
+startServer();
