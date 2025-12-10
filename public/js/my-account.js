@@ -1,5 +1,3 @@
-const { json } = require("body-parser");
-
 window.addEventListener("load", () => {
     checkLoginStatus();
     checkAdminStatus();
@@ -310,7 +308,10 @@ async function loadMyFlights() {
             alert('No flight found.');
             return;
         }
-        alert(JSON.stringify(data));
+        document.querySelector('#ssn-output').innerHTML = ""
+        for (const pair of data) {
+            document.querySelector('#ssn-output').innerHTML += `Flight ID: ${pair.flightId}, Booking ID: ${pair.flightBookingId}<br>`;
+        }
     } catch (error) {
         console.error('Error loading flights:', error);
         alert('An error occurred while loading flights.');
@@ -329,7 +330,10 @@ async function loadMyHotels() {
             alert('No hotel found.');
             return;
         }
-        alert(JSON.stringify(data));
+        document.querySelector('#ssn-output').innerHTML = ""
+        for (const pair of data) {
+            document.querySelector('#ssn-output').innerHTML += `Hotel ID: ${pair.hotelId}, Booking ID: ${pair.hotelBookingId}<br>`;
+        }
     } catch (error) {
         console.error('Error loading hotels:', error);
         alert('An error occurred while loading hotels.');

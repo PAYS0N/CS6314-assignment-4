@@ -363,7 +363,7 @@ app.get('/api/flights/bookings/:userSSN', async (req, res) => {
             return res.status(404).json({ error: 'Flights not found for this user' });
         }
 
-        res.json(rows[0]);
+        res.json(rows);
     } catch (err) {
         console.error('Error fetching flight:', err);
         res.status(500).json({ error: 'Database error' });
@@ -389,7 +389,7 @@ app.get('/api/hotels/bookings/:userSSN', async (req, res) => {
             return res.status(404).json({ error: 'Hotels not found for this user' });
         }
 
-        res.json(rows[0]);
+        res.json(rows);
     } catch (err) {
         console.error('Error fetching hotel:', err);
         res.status(500).json({ error: 'Database error' });
