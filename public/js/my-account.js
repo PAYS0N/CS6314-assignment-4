@@ -1,3 +1,5 @@
+const { json } = require("body-parser");
+
 window.addEventListener("load", () => {
     checkLoginStatus();
     checkAdminStatus();
@@ -296,13 +298,11 @@ async function loadFlightsToCalifornia() {
     }
 }
 
-async function loadMyFlight() {
-    const flightInput = document.getElementById('flight-id-input').value;
+async function loadMyFlights() {
     const ssn = document.getElementById('ssn-input').value;
-    const flightId = parseInt(flightInput, 10);
         
     try {
-        const response = await fetch(`/api/flights/${flightId}/${ssn}`);   
+        const response = await fetch(`/api/flights/bookings/${ssn}`);   
         
         const data = await response.json();
         
@@ -310,20 +310,18 @@ async function loadMyFlight() {
             alert('No flight found.');
             return;
         }
-        alert(data.flightId + ": " + data.origin + " to " + data.destination + ", $" + data.price);
+        alert(JSON.stringify(data));
     } catch (error) {
         console.error('Error loading flights:', error);
         alert('An error occurred while loading flights.');
     }
 }
 
-async function loadMyHotel() {
-    const hotelInput = document.getElementById('hotel-id-input').value;
+async function loadMyHotels() {
     const ssn = document.getElementById('ssn-input').value;
-    const hotelId = parseInt(hotelInput, 10);
         
     try {
-        const response = await fetch(`/api/hotels/${hotelId}/${ssn}`);   
+        const response = await fetch(`/api/hotels/bookings/${ssn}`);   
         
         const data = await response.json();
         
@@ -331,7 +329,7 @@ async function loadMyHotel() {
             alert('No hotel found.');
             return;
         }
-        alert(data.hotelId + ": " + data.hotelName + " in " + data.city + ", $" + data.pricePerNight);
+        alert(JSON.stringify(data));
     } catch (error) {
         console.error('Error loading hotels:', error);
         alert('An error occurred while loading hotels.');

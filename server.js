@@ -344,23 +344,23 @@ app.get('/api/bookings/sep2024', async (req, res) => {
 });
 
 
-app.get('/api/flights/:flightId/:userSSN', async (req, res) => {
-    const { flightId, userSSN } = req.params;
+app.get('/api/flights/bookings/:userSSN', async (req, res) => {
+    const { userSSN } = req.params;
 
     try {
         const [rows] = await pool.query(
             `
-            SELECT f.*
+            SELECT fb.flightBookingId, f.flightId
             FROM flights f
             JOIN flight_bookings fb ON f.flightId = fb.flightId
             JOIN tickets t ON fb.flightBookingId = t.flightBookingId
-            WHERE f.flightId = ? AND t.ssn = ?;
+            WHERE t.ssn = ?;
             `,
-            [flightId, userSSN]
+            [userSSN]
         );
 
         if (rows.length === 0) {
-            return res.status(404).json({ error: 'Flight not found for this user' });
+            return res.status(404).json({ error: 'Flights not found for this user' });
         }
 
         res.json(rows[0]);
@@ -370,23 +370,23 @@ app.get('/api/flights/:flightId/:userSSN', async (req, res) => {
     }
 });
 
-app.get('/api/hotels/:hotelId/:userSSN', async (req, res) => {
-    const { hotelId, userSSN } = req.params;
+app.get('/api/hotels/bookings/:userSSN', async (req, res) => {
+    const { userSSN } = req.params;
 
     try {
         const [rows] = await pool.query(
             `
-            SELECT h.*
+            SELECT hb.hotelBookingId, h.hotelId
             FROM hotels h
             JOIN hotel_bookings hb ON h.hotelId = hb.hotelId
             JOIN guesses g ON hb.hotelBookingId = g.hotelBookingId
-            WHERE h.hotelId = ? AND g.ssn = ?;
+            WHERE g.ssn = ?;
             `,
-            [hotelId, userSSN]
+            [userSSN]
         );
 
         if (rows.length === 0) {
-            return res.status(404).json({ error: 'Hotel not found for this user' });
+            return res.status(404).json({ error: 'Hotels not found for this user' });
         }
 
         res.json(rows[0]);
