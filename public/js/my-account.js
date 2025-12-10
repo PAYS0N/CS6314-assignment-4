@@ -108,3 +108,190 @@ async function loadFlightsFromTexas() {
         alert('An error occurred while loading flights.');
     }
 }
+
+async function loadHotelsInTexas() {
+    const adminPhone = sessionStorage.getItem('userPhone');
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    
+    if (isAdmin !== 'true' || adminPhone !== '222-222-2222') {
+        alert('Unauthorized. Admin access required.');
+        return;
+    }
+        
+    try {
+        const response = await fetch('/api/hotels/texas');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            for (const hotel of data.hotels) { 
+                alert(`Hotel ID: ${hotel.hotelId}`);
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading hotels in Texas:', error);
+        alert('An error occurred while loading hotels in Texas.');
+    }
+}
+
+async function loadExpensiveHotels() {
+    const adminPhone = sessionStorage.getItem('userPhone');
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    
+    if (isAdmin !== 'true' || adminPhone !== '222-222-2222') {
+        alert('Unauthorized. Admin access required.');
+        return;
+    }
+        
+    try {
+        const response = await fetch('/api/hotels/expensive');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            for (const hotel of data.hotels) { 
+                alert(`Hotel ID: ${hotel.hotelId}`);
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading expensive hotels:', error);
+        alert('An error occurred while loading expensive hotels.');
+    }
+}
+
+async function loadFlightsWithInfant() {
+    const adminPhone = sessionStorage.getItem('userPhone');
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    
+    if (isAdmin !== 'true' || adminPhone !== '222-222-2222') {
+        alert('Unauthorized. Admin access required.');
+        return;
+    }
+        
+    try {
+        const response = await fetch('/api/flights/infant');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            for (const flight of data.flights) { 
+                alert(`Flight ID: ${flight.flightId}`);
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading flights:', error);
+        alert('An error occurred while loading flights.');
+    }
+}
+
+async function loadFlightsWithChildren() {
+    const adminPhone = sessionStorage.getItem('userPhone');
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    
+    if (isAdmin !== 'true' || adminPhone !== '222-222-2222') {
+        alert('Unauthorized. Admin access required.');
+        return;
+    }
+        
+    try {
+        const response = await fetch('/api/flights/children');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            for (const flight of data.flights) { 
+                alert(`Flight ID: ${flight.flightId}`);
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading flights:', error);
+        alert('An error occurred while loading flights.');
+    }
+}
+
+async function loadExpensiveFlights() {
+    const adminPhone = sessionStorage.getItem('userPhone');
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    
+    if (isAdmin !== 'true' || adminPhone !== '222-222-2222') {
+        alert('Unauthorized. Admin access required.');
+        return;
+    }
+        
+    try {
+        const response = await fetch('/api/flights/expensive');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            for (const flight of data.flights) { 
+                alert(`Flight ID: ${flight.flightId}`);
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading flights:', error);
+        alert('An error occurred while loading flights.');
+    }
+}
+
+async function loadFlightsWithNoInfant() {
+    const adminPhone = sessionStorage.getItem('userPhone');
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    
+    if (isAdmin !== 'true' || adminPhone !== '222-222-2222') {
+        alert('Unauthorized. Admin access required.');
+        return;
+    }
+        
+    try {
+        const response = await fetch('/api/flights/noinfant');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            for (const flight of data.flights) { 
+                alert(`Flight ID: ${flight.flightId}`);
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading flights:', error);
+        alert('An error occurred while loading flights.');
+    }
+}
+
+async function loadFlightsToCalifornia() {
+    const adminPhone = sessionStorage.getItem('userPhone');
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    
+    if (isAdmin !== 'true' || adminPhone !== '222-222-2222') {
+        alert('Unauthorized. Admin access required.');
+        return;
+    }
+        
+    try {
+        const response = await fetch('/api/flights/arriving');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.bookedFlightsCount)
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading flights:', error);
+        alert('An error occurred while loading flights.');
+    }
+}

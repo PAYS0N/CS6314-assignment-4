@@ -39,10 +39,7 @@ app.get('/api/flights/departing', async (req, res) => {
         );
         
         if (rows.length === 0) {
-            res.json({
-                success: true,
-                flights: rows
-            });
+            return res.status(404).json({ error: 'No such flights' });
         }
         
         res.json({
@@ -70,7 +67,10 @@ app.get('/api/hotels/texas', async (req, res) => {
             return res.status(404).json({ error: 'No such hotels' });
         }
         
-        res.json(rows[0]);
+        res.json({
+            success: true,
+            hotels: rows
+        });
     } catch (err) {
         console.error('Error fetching hotels:', err);
         res.status(500).json({ error: 'Database error' });
@@ -92,7 +92,10 @@ app.get('/api/hotels/expensive', async (req, res) => {
             return res.status(404).json({ error: 'No such hotels' });
         }
         
-        res.json(rows[0]);
+        res.json({
+            success: true,
+            hotels: rows
+        });
     } catch (err) {
         console.error('Error fetching hotels:', err);
         res.status(500).json({ error: 'Database error' });
@@ -114,7 +117,10 @@ app.get('/api/flights/expensive', async (req, res) => {
             return res.status(404).json({ error: 'No such flights' });
         }
         
-        res.json(rows[0]);
+        res.json({
+            success: true,
+            flights: rows
+        });
     } catch (err) {
         console.error('Error fetching flights:', err);
         res.status(500).json({ error: 'Database error' });
@@ -126,6 +132,7 @@ app.get('/api/flights/infant', async (req, res) => {
         const [rows] = await pool.query(
             `SELECT DISTINCT fb.flightBookingId, f.*
             FROM flight_bookings fb
+            JOIN flights f ON fb.flightId = f.flightId
             JOIN tickets t ON fb.flightBookingId = t.flightBookingId
             JOIN passengers p ON t.ssn = p.ssn
             WHERE p.category = 'infant';
@@ -136,7 +143,10 @@ app.get('/api/flights/infant', async (req, res) => {
             return res.status(404).json({ error: 'No such flights' });
         }
         
-        res.json(rows[0]);
+        res.json({
+            success: true,
+            flights: rows
+        });
     } catch (err) {
         console.error('Error fetching flights:', err);
         res.status(500).json({ error: 'Database error' });
@@ -146,12 +156,12 @@ app.get('/api/flights/infant', async (req, res) => {
 app.get('/api/flights/noinfant', async (req, res) => {
     try {
         const [rows] = await pool.query(
-            `SELECT fb.flightBookingId, f.*
+            `SELECT DISTINCT f.*
             FROM flight_bookings fb
             JOIN flights f ON fb.flightId = f.flightId
-            WHERE f.origin LIKE '%Texas%'
+            WHERE f.origin LIKE '%Austin%'
             AND fb.flightBookingId NOT IN (
-                SELECT DISTINCT fb2.flightBookingId
+                SELECT fb2.flightBookingId
                 FROM flight_bookings fb2
                 JOIN tickets t2 ON fb2.flightBookingId = t2.flightBookingId
                 JOIN passengers p2 ON t2.ssn = p2.ssn
@@ -164,7 +174,10 @@ app.get('/api/flights/noinfant', async (req, res) => {
             return res.status(404).json({ error: 'No such flights' });
         }
         
-        res.json(rows[0]);
+        res.json({
+            success: true,
+            flights: rows
+        });
     } catch (err) {
         console.error('Error fetching flights:', err);
         res.status(500).json({ error: 'Database error' });
@@ -176,6 +189,7 @@ app.get('/api/flights/children', async (req, res) => {
         const [rows] = await pool.query(
             `SELECT fb.flightBookingId, f.*
             FROM flight_bookings fb
+            JOIN flights f ON fb.flightId = f.flightId
             JOIN tickets t ON fb.flightBookingId = t.flightBookingId
             JOIN passengers p ON t.ssn = p.ssn
             GROUP BY fb.flightBookingId
@@ -188,7 +202,10 @@ app.get('/api/flights/children', async (req, res) => {
             return res.status(404).json({ error: 'No such flights' });
         }
         
-        res.json(rows[0]);
+        res.json({
+            success: true,
+            flights: rows
+        });
     } catch (err) {
         console.error('Error fetching flights:', err);
         res.status(500).json({ error: 'Database error' });
@@ -201,7 +218,7 @@ app.get('/api/flights/arriving', async (req, res) => {
             `SELECT COUNT(*) AS bookedFlightsCount
             FROM flight_bookings fb
             JOIN flights f ON fb.flightId = f.flightId
-            WHERE f.destination LIKE '%California%'
+            WHERE f.destination LIKE '%Sacramento%'
             AND f.arrivalDate BETWEEN '2024-09-01' AND '2024-10-31';
             `
         );
@@ -210,7 +227,10 @@ app.get('/api/flights/arriving', async (req, res) => {
             return res.status(404).json({ error: 'No such flights' });
         }
         
-        res.json(rows[0]);
+        res.json({
+            success: true,
+            bookedFlightsCount: rows[0].bookedFlightsCount
+        });
     } catch (err) {
         console.error('Error fetching flights:', err);
         res.status(500).json({ error: 'Database error' });
