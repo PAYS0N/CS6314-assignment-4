@@ -68,7 +68,30 @@
             <!-- User Bookings Section -->
             <div id="user-section">
                 <h3>My Bookings</h3>
-                <div id="bookings-output"></div>
+                <input type="text" id="ssn-input" placeholder="SSN">
+                <br>
+
+                <input type="number" id="flight-id-input" placeholder="Flight Id">
+                <button onclick="loadMyFlight()">Find flight for passenger by Flight Id</button>
+
+                <input type="number" id="hotel-id-input" placeholder="Hotel Id">
+                <button onclick="loadMyHotel()">Find hotel for passenger by Hotel Id</button>
+
+                <br>
+                <br>
+                
+                <input type="number" id="booked-flight-id-input" placeholder="Flight booking Id">
+                <button onclick="loadBookedFlight()">Find flight booking</button>
+
+                <input type="number" id="booked-hotel-id-input" placeholder="Hotel booking Id">
+                <button onclick="loadBookedHotel()">Find hotel booking</button>
+                <br>
+                <br>
+
+                <input type="number" id="passenger-flight-id" placeholder="Flight booking Id">
+                <button onclick="loadPassengers()">Find passengers for flight</button>
+
+                <div id="booking-output"></div>
             </div>
         </div>
     </div>

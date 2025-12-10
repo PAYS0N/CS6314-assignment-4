@@ -295,3 +295,112 @@ async function loadFlightsToCalifornia() {
         alert('An error occurred while loading flights.');
     }
 }
+
+async function loadMyFlight() {
+    const flightInput = document.getElementById('flight-id-input').value;
+    const ssn = document.getElementById('ssn-input').value;
+    const flightId = parseInt(flightInput, 10);
+        
+    try {
+        const response = await fetch(`/api/flights/${flightId}/${ssn}`);   
+        
+        const data = await response.json();
+        
+        if (response.status === 404) {
+            alert('No flight found.');
+            return;
+        }
+        alert(data.flightId + ": " + data.origin + " to " + data.destination + ", $" + data.price);
+    } catch (error) {
+        console.error('Error loading flights:', error);
+        alert('An error occurred while loading flights.');
+    }
+}
+
+async function loadMyHotel() {
+    const hotelInput = document.getElementById('hotel-id-input').value;
+    const ssn = document.getElementById('ssn-input').value;
+    const hotelId = parseInt(hotelInput, 10);
+        
+    try {
+        const response = await fetch(`/api/hotels/${hotelId}/${ssn}`);   
+        
+        const data = await response.json();
+        
+        if (response.status === 404) {
+            alert('No hotel found.');
+            return;
+        }
+        alert(data.hotelId + ": " + data.hotelName + " in " + data.city + ", $" + data.pricePerNight);
+    } catch (error) {
+        console.error('Error loading hotels:', error);
+        alert('An error occurred while loading hotels.');
+    }
+}
+
+async function loadPassengers() {
+    const flightInput = document.getElementById('passenger-flight-id').value;
+    const flightId = parseInt(flightInput, 10);
+        
+    try {
+        const response = await fetch(`/api/bookings/${flightId}/passengers`);   
+        
+        const data = await response.json();
+        
+        if (response.status === 404) {
+            alert('No flight booking found.');
+            return;
+        }
+
+        for (const passenger of data.passengers) { 
+            alert(`Passenger ${passenger.ssn}: ${passenger.firstName} ${passenger.lastName}, Category: ${passenger.category}`);
+        }
+
+    } catch (error) {
+        console.error('Error loading passengers', error);
+        alert('An error occurred while loading passengers.');
+    }
+}
+
+async function loadBookedFlight() {
+    const flightInput = document.getElementById('booked-flight-id-input').value;
+    const flightId = parseInt(flightInput, 10);
+        
+    try {
+        const response = await fetch(`/api/bookings/flight/${flightId}`);   
+        
+        const data = await response.json();
+        
+        if (response.status === 404) {
+            alert('No flight booking found.');
+            return;
+        }
+
+        alert(`Booking ID: ${data.flightBookingId}, Flight ID: ${data.flightId}, Total Price: $${data.totalPrice}`);
+
+    } catch (error) {
+        console.error('Error loading passengers', error);
+        alert('An error occurred while loading passengers.');
+    }
+}
+
+async function loadBookedHotel() {
+    const hotelInput = document.getElementById('booked-hotel-id-input').value;
+    const hotelId = parseInt(hotelInput, 10);
+        
+    try {
+        const response = await fetch(`/api/bookings/hotel/${hotelId}`);   
+        
+        const data = await response.json();
+        
+        if (response.status === 404) {
+            alert('No hotel booking found.');
+            return;
+        }
+
+        alert(`Hotel ${data.hotelId}: ${data.checkInDate.split('T')[0]} to ${data.checkOutDate.split('T')[0]}, Total Price: $${data.totalPrice}`);
+    } catch (error) {
+        console.error('Error loading passengers', error);
+        alert('An error occurred while loading passengers.');
+    }
+}

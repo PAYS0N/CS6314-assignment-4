@@ -237,6 +237,130 @@ app.get('/api/flights/arriving', async (req, res) => {
     }
 });
 
+app.get('/api/bookings/:flightBookingId/passengers', async (req, res) => {
+    const { flightBookingId } = req.params;
+
+    try {
+        const [rows] = await pool.query(
+            `
+            SELECT DISTINCT p.*
+            FROM passengers p
+            JOIN tickets t ON p.ssn = t.ssn
+            WHERE t.flightBookingId = ?
+            `,
+            [flightBookingId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'No passengers found for this booking' });
+        }
+
+        res.json({
+            success: true,
+            passengers: rows
+        });
+    } catch (err) {
+        console.error('Error fetching passengers:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/bookings/flight/:flightBookingId', async (req, res) => {
+    const { flightBookingId } = req.params;
+
+    try {
+        const [rows] = await pool.query(
+            `
+            SELECT * FROM flight_bookings WHERE flightBookingId = ?;
+            `,
+            [flightBookingId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Nothing found for this booking' });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching booking:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/bookings/hotel/:hotelBookingId', async (req, res) => {
+    const { hotelBookingId } = req.params;
+
+    try {
+        const [rows] = await pool.query(
+            `
+            SELECT * FROM hotel_bookings WHERE hotelBookingId = ?;
+            `,
+            [hotelBookingId]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Nothing found for this booking' });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching booking:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/flights/:flightId/:userSSN', async (req, res) => {
+    const { flightId, userSSN } = req.params;
+
+    try {
+        const [rows] = await pool.query(
+            `
+            SELECT f.*
+            FROM flights f
+            JOIN flight_bookings fb ON f.flightId = fb.flightId
+            JOIN tickets t ON fb.flightBookingId = t.flightBookingId
+            WHERE f.flightId = ? AND t.ssn = ?;
+            `,
+            [flightId, userSSN]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Flight not found for this user' });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching flight:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/hotels/:hotelId/:userSSN', async (req, res) => {
+    const { hotelId, userSSN } = req.params;
+
+    try {
+        const [rows] = await pool.query(
+            `
+            SELECT h.*
+            FROM hotels h
+            JOIN hotel_bookings hb ON h.hotelId = hb.hotelId
+            JOIN guesses g ON hb.hotelBookingId = g.hotelBookingId
+            WHERE h.hotelId = ? AND g.ssn = ?;
+            `,
+            [hotelId, userSSN]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Hotel not found for this user' });
+        }
+
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching hotel:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 app.post('/api/contact', (req, res) => {
     const { firstName, lastName, phone, gender, email, dob, comment } = req.body;
     const xmlFile = './data/contacts.xml';
