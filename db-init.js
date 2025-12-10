@@ -106,6 +106,46 @@ async function initializeDatabase() {
         `);
         console.log('Table "contacts" created or already exists');
         
+        // Create hotels table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS hotels (
+                hotelId VARCHAR(20) PRIMARY KEY,
+                hotelName VARCHAR(100) NOT NULL,
+                city VARCHAR(50) NOT NULL,
+                pricePerNight DECIMAL(10,2) NOT NULL
+            )
+        `);
+        console.log('Table "hotels" created or already exists');
+        
+        // Create hotel_bookings table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS hotel_bookings (
+                hotelBookingId INT(11) AUTO_INCREMENT PRIMARY KEY,
+                hotelId VARCHAR(20) NOT NULL,
+                checkInDate DATE NOT NULL,
+                checkOutDate DATE NOT NULL,
+                numberOfRooms INT NOT NULL,
+                pricePerNight DECIMAL(10,2) NOT NULL,
+                totalPrice DECIMAL(10,2) NOT NULL,
+                FOREIGN KEY (hotelId) REFERENCES hotels(hotelId)
+            )
+        `);
+        console.log('Table "hotel_bookings" created or already exists');
+        
+        // Create guesses table (guests)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS guesses (
+                ssn VARCHAR(11) NOT NULL,
+                hotelBookingId INT(11) NOT NULL,
+                firstName VARCHAR(50) NOT NULL,
+                lastName VARCHAR(50) NOT NULL,
+                dateOfBirth VARCHAR(10) NOT NULL,
+                category ENUM('adult','child','infant') NOT NULL,
+                PRIMARY KEY (ssn, hotelBookingId),
+                FOREIGN KEY (hotelBookingId) REFERENCES hotel_bookings(hotelBookingId)
+            )
+        `);
+        console.log('Table "guesses" created or already exists');        
         console.log('Database initialization completed successfully!');
         
     } catch (err) {

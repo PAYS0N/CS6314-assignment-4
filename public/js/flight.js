@@ -47,7 +47,7 @@ function submitBookForm(e) {
     else if (!dateRegex.test(departure)) {
         alert("Must depart from Sep 1, 2024 to Dec 1st, 2024.")
     }
-    else if (new Date(departure) > new Date(returnDate)) {
+    else if (returnDate && new Date(departure) > new Date(returnDate)) {
         alert("Must depart before return")
     }
     else if (returnDate != "") {
@@ -116,10 +116,13 @@ async function displayAvailableFlights(flightDetails, passengerDetails) {
     let [adults, children, infants] = passengerDetails;
     
     document.querySelector("#flights-output").innerHTML = "";
+    document.querySelector("#return-flights-output").innerHTML = "";
     
     const strOriginName = origin.trim().split(",")[0];
     const strDestName = destination.trim().split(",")[0];
     const totalPassengers = adults + children + infants;
+    
+    const isRoundTrip = returnDate && returnDate !== "";
     
     let depFound = false;
     let retFound = false;
@@ -130,18 +133,19 @@ async function displayAvailableFlights(flightDetails, passengerDetails) {
         
         if (depFlights && depFlights.length > 0) {
             depFlights.forEach(flight => {
-                addAFlight(flight, adults, children, infants, true);
+                addAFlight(flight, adults, children, infants, true, isRoundTrip);
             });
             depFound = true;
         }
         
         // Search for return flights if round trip (exact date first)
-        if (returnDate && returnDate !== "") {
+        if (isRoundTrip) {
+            revealReturnFlightLabels();
             let retFlights = await searchFlights(strDestName, strOriginName, returnDate, totalPassengers, true);
             
             if (retFlights && retFlights.length > 0) {
                 retFlights.forEach(flight => {
-                    addAFlight(flight, adults, children, infants, false);
+                    addAFlight(flight, adults, children, infants, false, isRoundTrip);
                 });
                 retFound = true;
             }
@@ -156,24 +160,24 @@ async function displayAvailableFlights(flightDetails, passengerDetails) {
             
             if (depFlightsNear && depFlightsNear.length > 0) {
                 depFlightsNear.forEach(flight => {
-                    addAFlight(flight, adults, children, infants, true);
+                    addAFlight(flight, adults, children, infants, true, isRoundTrip);
                 });
                 depFound = true;
             }
         }
         
-        if (!retFound && returnDate && returnDate !== "") {
+        if (!retFound && isRoundTrip) {
             let retFlightsNear = await searchFlights(strDestName, strOriginName, returnDate, totalPassengers, false);
             
             if (retFlightsNear && retFlightsNear.length > 0) {
                 retFlightsNear.forEach(flight => {
-                    addAFlight(flight, adults, children, infants, false);
+                    addAFlight(flight, adults, children, infants, false, isRoundTrip);
                 });
                 retFound = true;
             }
         }
         
-        if (!depFound || (returnDate && returnDate !== "" && !retFound)) {
+        if (!depFound || (isRoundTrip && !retFound)) {
             alert("No flights found for the selected dates");
         }
         
@@ -182,7 +186,8 @@ async function displayAvailableFlights(flightDetails, passengerDetails) {
         alert('Error searching for flights. Please try again.');
     }
 }
-function addAFlight(flight, adults, children, infants, isDepFlight) {
+
+function addAFlight(flight, adults, children, infants, isDepFlight, isRoundTrip) {
     revealFlightLabels();
 
     const htmlFlight = createFlightObj(
@@ -198,10 +203,15 @@ function addAFlight(flight, adults, children, infants, isDepFlight) {
         adults,
         children,
         infants,
-        isDepFlight
+        isDepFlight,
+        isRoundTrip
     );
 
-    document.querySelector("#flights-output").appendChild(htmlFlight);
+    if (isDepFlight) {
+        document.querySelector("#flights-output").appendChild(htmlFlight);
+    } else {
+        document.querySelector("#return-flights-output").appendChild(htmlFlight);
+    }
     return true
 }
 
@@ -224,7 +234,7 @@ async function searchFlights(origin, destination, date, passengers, exactDate) {
     }
 }
 
-function createFlightObj(id, origin, dest, depdate, arrdate, deptime, arrtime, price, seats, adults, children, infants, isDepFlight) {
+function createFlightObj(id, origin, dest, depdate, arrdate, deptime, arrtime, price, seats, adults, children, infants, isDepFlight, isRoundTrip) {
     const trFlight = document.createElement('tr')
     trFlight.appendChild(createTextCell(id))
     trFlight.appendChild(createTextCell(origin))
@@ -235,13 +245,23 @@ function createFlightObj(id, origin, dest, depdate, arrdate, deptime, arrtime, p
     trFlight.appendChild(createTextCell(arrtime))
     trFlight.appendChild(createTextCell(price))
     trFlight.appendChild(createTextCell(seats))
-    const cartCell = createButtonCell("Add " + (isDepFlight ? "Departure" : "Return") + " to cart")
+    
+    let buttonText = "Add to cart";
+    if (isRoundTrip) {
+        buttonText = isDepFlight ? "Select Departure" : "Select Return";
+    }
+    
+    const cartCell = createButtonCell(buttonText)
     cartCell.addEventListener("click", () => {
         if (seats < adults+children+infants) {
             alert("You require too many seats. Reduce guests or pick a different flight.")
         }
         else {
-            addFlightToCart(id, adults, children, infants)
+            if (isRoundTrip) {
+                addFlightToRoundTrip(id, adults, children, infants, isDepFlight)
+            } else {
+                addFlightToCart(id, adults, children, infants)
+            }
         }
     })
     trFlight.appendChild(cartCell)
@@ -263,12 +283,19 @@ function createButtonCell(text) {
 }
 
 function revealFlightLabels() {
+    document.querySelector("#departure-flights-label").classList.remove("hidden")
     document.querySelector("#flights-table").classList.remove("hidden")
+}
+
+function revealReturnFlightLabels() {
+    document.querySelector("#return-flights-label").classList.remove("hidden")
+    document.querySelector("#return-flights-table").classList.remove("hidden")
 }
 
 function addFlightToCart(id, adults, children, infants) {    
     const cartItem = {
         type: 'flight',
+        tripType: 'oneway',
         flightId: id,
         adults: adults,
         children: children,
@@ -280,4 +307,46 @@ function addFlightToCart(id, adults, children, infants) {
     sessionStorage.setItem('cart', JSON.stringify(cart));
 
     alert('Flight added to cart!');
+}
+
+function addFlightToRoundTrip(id, adults, children, infants, isDepFlight) {
+    // Store in session storage temporarily
+    if (isDepFlight) {
+        sessionStorage.setItem('roundTripDeparture', JSON.stringify({
+            flightId: id,
+            adults: adults,
+            children: children,
+            infants: infants
+        }));
+        alert('Departure flight selected! Now select a return flight.');
+    } else {
+        // Check if departure is selected
+        const departure = sessionStorage.getItem('roundTripDeparture');
+        if (!departure) {
+            alert('Please select a departure flight first!');
+            return;
+        }
+        
+        const depData = JSON.parse(departure);
+        
+        // Add round trip to cart
+        const cartItem = {
+            type: 'flight',
+            tripType: 'roundtrip',
+            departureFlight: depData.flightId,
+            returnFlight: id,
+            adults: adults,
+            children: children,
+            infants: infants,
+        };
+        
+        let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+        cart.push(cartItem);
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+        
+        // Clear temporary storage
+        sessionStorage.removeItem('roundTripDeparture');
+        
+        alert('Round trip flights added to cart!');
+    }
 }

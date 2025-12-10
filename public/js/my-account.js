@@ -51,7 +51,60 @@ async function loadFlightsToDatabase() {
     }
 }
 
-// Placeholder for hotels function (you'll implement this similarly)
 async function loadHotelsToDatabase() {
-    alert('Hotels loading function - to be implemented');
+    const adminPhone = sessionStorage.getItem('userPhone');
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    
+    if (isAdmin !== 'true' || adminPhone !== '222-222-2222') {
+        alert('Unauthorized. Admin access required.');
+        return;
+    }
+        
+    try {
+        const response = await fetch('/api/admin/load-hotels', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ adminPhone: adminPhone })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message + `\nSuccess: ${data.successCount}, Errors: ${data.errorCount}`);
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading hotels:', error);
+        alert('An error occurred while loading hotels.');
+    }
+}
+
+async function loadFlightsFromTexas() {
+    const adminPhone = sessionStorage.getItem('userPhone');
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    
+    if (isAdmin !== 'true' || adminPhone !== '222-222-2222') {
+        alert('Unauthorized. Admin access required.');
+        return;
+    }
+        
+    try {
+        const response = await fetch('/api/flights/departing');
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            for (const flight of data.flights) { 
+                alert(`Flight ID: ${flight.flightId}`);
+            }
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error loading flights:', error);
+        alert('An error occurred while loading flights.');
+    }
 }

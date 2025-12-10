@@ -27,7 +27,196 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // API Routes
-// Contact submission route - stores in XML with auto-increment
+app.get('/api/flights/departing', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT DISTINCT f.*
+            FROM flight_bookings fb
+            JOIN flights f ON fb.flightId = f.flightId
+            WHERE f.origin LIKE '%Austin%'
+            AND f.departureDate BETWEEN '2024-09-01' AND '2024-10-31';
+            `
+        );
+        
+        if (rows.length === 0) {
+            res.json({
+                success: true,
+                flights: rows
+            });
+        }
+        
+        res.json({
+            success: true,
+            flights: rows
+        });
+    } catch (err) {
+        console.error('Error fetching flights:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/hotels/texas', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT hb.hotelBookingId, hb.*, h.*
+            FROM hotel_bookings hb
+            JOIN hotels h ON hb.hotelId = h.hotelId
+            WHERE h.city IN ('Austin', 'Dallas', 'Houston', 'San Antonio')
+            AND hb.checkInDate BETWEEN '2024-09-01' AND '2024-10-31';
+            `
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'No such hotels' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching hotels:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/hotels/expensive', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT hb.hotelBookingId, hb.*, h.*
+            FROM hotel_bookings hb
+            JOIN hotels h ON hb.hotelId = h.hotelId
+            WHERE hb.totalPrice = (
+            SELECT MAX(totalPrice) FROM hotel_bookings);
+            `
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'No such hotels' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching hotels:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/flights/expensive', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT fb.flightBookingId, fb.*, f.*
+            FROM flight_bookings fb
+            JOIN flights f ON fb.flightId = f.flightId
+            WHERE fb.totalPrice = (
+                SELECT MAX(totalPrice) FROM flight_bookings
+            );`
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'No such flights' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching flights:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/flights/infant', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT DISTINCT fb.flightBookingId, f.*
+            FROM flight_bookings fb
+            JOIN tickets t ON fb.flightBookingId = t.flightBookingId
+            JOIN passengers p ON t.ssn = p.ssn
+            WHERE p.category = 'infant';
+            `
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'No such flights' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching flights:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/flights/noinfant', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT fb.flightBookingId, f.*
+            FROM flight_bookings fb
+            JOIN flights f ON fb.flightId = f.flightId
+            WHERE f.origin LIKE '%Texas%'
+            AND fb.flightBookingId NOT IN (
+                SELECT DISTINCT fb2.flightBookingId
+                FROM flight_bookings fb2
+                JOIN tickets t2 ON fb2.flightBookingId = t2.flightBookingId
+                JOIN passengers p2 ON t2.ssn = p2.ssn
+                WHERE p2.category = 'infant'
+            );
+            `
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'No such flights' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching flights:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/flights/children', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT fb.flightBookingId, f.*
+            FROM flight_bookings fb
+            JOIN tickets t ON fb.flightBookingId = t.flightBookingId
+            JOIN passengers p ON t.ssn = p.ssn
+            GROUP BY fb.flightBookingId
+            HAVING SUM(CASE WHEN p.category = 'infant' THEN 1 ELSE 0 END) >= 1
+            AND SUM(CASE WHEN p.category = 'child' THEN 1 ELSE 0 END) >= 5;
+            `
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'No such flights' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching flights:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+app.get('/api/flights/arriving', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            `SELECT COUNT(*) AS bookedFlightsCount
+            FROM flight_bookings fb
+            JOIN flights f ON fb.flightId = f.flightId
+            WHERE f.destination LIKE '%California%'
+            AND f.arrivalDate BETWEEN '2024-09-01' AND '2024-10-31';
+            `
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'No such flights' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching flights:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
 app.post('/api/contact', (req, res) => {
     const { firstName, lastName, phone, gender, email, dob, comment } = req.body;
     const xmlFile = './data/contacts.xml';
@@ -628,5 +817,245 @@ async function startServer() {
         process.exit(1);
     }
 }
+
+app.post('/api/admin/load-hotels', async (req, res) => {
+    const adminPhone = req.body.adminPhone;
+    
+    // Verify admin
+    if (adminPhone !== '222-222-2222') {
+        return res.status(403).json({ 
+            success: false, 
+            error: 'Unauthorized. Admin access required.' 
+        });
+    }
+    
+    try {
+        // Read hotels from XML file
+        const hotelsFile = './data/hotels.xml';
+        
+        if (!fs.existsSync(hotelsFile)) {
+            return res.status(404).json({ 
+                success: false, 
+                error: 'Hotels XML file not found' 
+            });
+        }
+        
+        const xmlData = fs.readFileSync(hotelsFile, 'utf8');
+        
+        xml2js.parseString(xmlData, async (err, result) => {
+            if (err) {
+                return res.status(500).json({ 
+                    success: false, 
+                    error: 'Failed to parse XML file' 
+                });
+            }
+            
+            if (!result.hotels || !result.hotels.hotel) {
+                return res.status(400).json({ 
+                    success: false, 
+                    error: 'Invalid hotels XML structure' 
+                });
+            }
+            
+            const hotels = result.hotels.hotel;
+            
+            try {
+                // Clear existing hotels (optional)
+                await pool.query('DELETE FROM hotels');
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (const hotel of hotels) {
+                    try {
+                        await pool.query(
+                            'INSERT INTO hotels (hotelId, hotelName, city, pricePerNight) VALUES (?, ?, ?, ?)',
+                            [
+                                hotel.hotelId[0],
+                                hotel.name[0],
+                                hotel.city[0],
+                                parseFloat(hotel.pricePerNight[0])
+                            ]
+                        );
+                        successCount++;
+                    } catch (err) {
+                        console.error(`Error inserting hotel ${hotel.hotelId[0]}:`, err);
+                        errorCount++;
+                    }
+                }
+                
+                res.json({ 
+                    success: true,
+                    message: `Successfully loaded ${successCount} hotels into database`,
+                    successCount: successCount,
+                    errorCount: errorCount
+                });
+                
+            } catch (err) {
+                console.error('Error loading hotels:', err);
+                res.status(500).json({ 
+                    success: false, 
+                    error: 'Failed to load hotels into database' 
+                });
+            }
+        });
+        
+    } catch (err) {
+        console.error('Error loading hotels:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Failed to load hotels into database' 
+        });
+    }
+});
+
+// Get hotels from database by city
+app.get('/api/hotels/search', async (req, res) => {
+    const { city } = req.query;
+    
+    if (!city) {
+        return res.status(400).json({ 
+            error: 'Missing required parameter: city' 
+        });
+    }
+    
+    try {
+        const [rows] = await pool.query(
+            'SELECT * FROM hotels WHERE city = ?',
+            [city]
+        );
+        
+        res.json({ 
+            hotels: rows,
+            count: rows.length
+        });
+        
+    } catch (err) {
+        console.error('Error searching hotels:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Get specific hotel by ID
+app.get('/api/hotels/:hotelId', async (req, res) => {
+    const { hotelId } = req.params;
+    
+    try {
+        const [rows] = await pool.query(
+            'SELECT * FROM hotels WHERE hotelId = ?',
+            [hotelId]
+        );
+        
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Hotel not found' });
+        }
+        
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('Error fetching hotel:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+// Complete hotel booking with guest information
+app.post('/api/hotel-bookings/complete', async (req, res) => {
+    const { bookings } = req.body;
+    
+    if (!bookings || !Array.isArray(bookings) || bookings.length === 0) {
+        return res.status(400).json({ 
+            success: false, 
+            error: 'Invalid booking data' 
+        });
+    }
+    
+    const connection = await pool.getConnection();
+    
+    try {
+        await connection.beginTransaction();
+        
+        const completedBookings = [];
+        
+        for (const booking of bookings) {
+            const { hotelId, checkInDate, checkOutDate, numberOfRooms, guests, totalPrice } = booking;
+            
+            // Get hotel details
+            const [hotelRows] = await connection.query(
+                'SELECT * FROM hotels WHERE hotelId = ?',
+                [hotelId]
+            );
+            
+            if (hotelRows.length === 0) {
+                throw new Error(`Hotel ${hotelId} not found`);
+            }
+            
+            const hotel = hotelRows[0];
+            
+            // Insert hotel booking
+            const [bookingResult] = await connection.query(
+                'INSERT INTO hotel_bookings (hotelId, checkInDate, checkOutDate, numberOfRooms, pricePerNight, totalPrice) VALUES (?, ?, ?, ?, ?, ?)',
+                [hotelId, checkInDate, checkOutDate, numberOfRooms, hotel.pricePerNight, totalPrice]
+            );
+            
+            const hotelBookingId = bookingResult.insertId;
+            
+            // Insert guests
+            const guestDetails = [];
+            for (const guest of guests) {
+                // Check if guest with same SSN already exists in guesses table for this booking
+                const [existingGuest] = await connection.query(
+                    'SELECT ssn FROM guesses WHERE ssn = ? AND hotelBookingId = ?',
+                    [guest.ssn, hotelBookingId]
+                );
+                
+                if (existingGuest.length === 0) {
+                    await connection.query(
+                        'INSERT INTO guesses (ssn, hotelBookingId, firstName, lastName, dateOfBirth, category) VALUES (?, ?, ?, ?, ?, ?)',
+                        [guest.ssn, hotelBookingId, guest.firstName, guest.lastName, guest.dateOfBirth, guest.category]
+                    );
+                }
+                
+                guestDetails.push({
+                    ssn: guest.ssn,
+                    hotelBookingId: hotelBookingId,
+                    firstName: guest.firstName,
+                    lastName: guest.lastName,
+                    dateOfBirth: guest.dateOfBirth,
+                    category: guest.category
+                });
+            }
+            
+            // Add completed booking info
+            completedBookings.push({
+                hotelBookingId: hotelBookingId,
+                hotelId: hotelId,
+                hotelName: hotel.hotelName,
+                city: hotel.city,
+                checkInDate: checkInDate,
+                checkOutDate: checkOutDate,
+                numberOfRooms: numberOfRooms,
+                pricePerNight: hotel.pricePerNight,
+                totalPrice: totalPrice,
+                guests: guestDetails
+            });
+        }
+        
+        await connection.commit();
+        
+        res.json({ 
+            success: true,
+            bookings: completedBookings
+        });
+        
+    } catch (err) {
+        await connection.rollback();
+        console.error('Error completing hotel booking:', err);
+        res.status(500).json({ 
+            success: false, 
+            error: err.message || 'Failed to complete booking' 
+        });
+    } finally {
+        connection.release();
+    }
+});
 
 startServer();
