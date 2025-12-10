@@ -384,6 +384,31 @@ async function loadBookedFlight() {
     }
 }
 
+async function loadSeptember() {
+    try {
+        const response = await fetch(`/api/bookings/sep2024`);   
+        
+        const data = await response.json();
+        
+        if (response.status === 404) {
+            alert('No flight booking found.');
+            return;
+        }
+
+        for (const flight of data.flights) { 
+            document.querySelector('#booking-output').innerHTML += "Flight ID: " + flight + "<br>";
+        }
+        for (const hotel of data.hotels) { 
+            document.querySelector('#booking-output').innerHTML += "Hotel ID: " + hotel + "<br>";
+        }
+
+
+    } catch (error) {
+        console.error('Error loading passengers', error);
+        alert('An error occurred while loading passengers.');
+    }
+}
+
 async function loadBookedHotel() {
     const hotelInput = document.getElementById('booked-hotel-id-input').value;
     const hotelId = parseInt(hotelInput, 10);

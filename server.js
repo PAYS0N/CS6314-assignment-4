@@ -309,6 +309,41 @@ app.get('/api/bookings/hotel/:hotelBookingId', async (req, res) => {
     }
 });
 
+app.get('/api/bookings/sep2024', async (req, res) => {
+    try {
+        const [flights] = await pool.query(
+            `
+            SELECT DISTINCT f.flightId
+            FROM flight_bookings fb
+            JOIN flights f ON fb.flightId = f.flightId
+            WHERE f.departureDate BETWEEN '2024-09-01' AND '2024-09-30';
+            `
+        );
+
+        const [hotels] = await pool.query(
+            `
+            SELECT DISTINCT h.hotelId
+            FROM hotel_bookings hb
+            JOIN hotels h ON hb.hotelId = h.hotelId
+            WHERE (hb.checkInDate BETWEEN '2024-09-01' AND '2024-09-30')
+               OR (hb.checkOutDate BETWEEN '2024-09-01' AND '2024-09-30')
+               OR (hb.checkInDate <= '2024-09-01' AND hb.checkOutDate >= '2024-09-30');
+            `
+        );
+
+        res.json({
+            success: true,
+            flights: flights.map(f => f.flightId),
+            hotels: hotels.map(h => h.hotelId)
+        });
+
+    } catch (err) {
+        console.error('Error fetching bookings for Sep 2024:', err);
+        res.status(500).json({ error: 'Database error' });
+    }
+});
+
+
 app.get('/api/flights/:flightId/:userSSN', async (req, res) => {
     const { flightId, userSSN } = req.params;
 
